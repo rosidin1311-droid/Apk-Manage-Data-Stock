@@ -11,6 +11,7 @@
     <h1 class="text-xl font-bold text-center mb-6">Corduroy PPIC System</h1>
     
     <div class="flex justify-center gap-2 mb-6 text-[10px]">
+        <button onclick="pindah('master_list')" class="bg-slate-700 text-white px-3 py-2 rounded">MASTER LIST</button>
         <button onclick="pindah('master')" class="bg-slate-700 text-white px-3 py-2 rounded">MASTER</button>
         <button onclick="pindah('input')" class="bg-slate-700 text-white px-3 py-2 rounded">INPUT WIP</button>
         <button onclick="pindah('wip_report')" class="bg-slate-700 text-white px-3 py-2 rounded">LAPORAN WIP</button>
@@ -23,6 +24,16 @@
         <input id="m_item" class="w-full border p-2 mb-2 rounded" placeholder="Nama Item">
         <input id="m_proses" class="w-full border p-2 mb-4 rounded" placeholder="Proses (ex: Potong,Jahit,QC)">
         <button onclick="simpanMaster()" class="w-full bg-blue-600 text-white p-2 rounded font-bold">SIMPAN MASTER</button>
+    </div>
+
+    <div id="master_list" class="page max-w-4xl mx-auto bg-white p-6 rounded-xl shadow border">
+        <h2 class="font-bold mb-4">Daftar Master Item</h2>
+        <table class="w-full text-xs text-left">
+            <thead class="bg-slate-800 text-white">
+                <tr><th class="p-2">Customer</th><th class="p-2">Model</th><th class="p-2">Item</th><th class="p-2">Proses</th><th class="p-2">Aksi</th></tr>
+            </thead>
+            <tbody id="master-tabel-body"></tbody>
+        </table>
     </div>
 
     <div id="input" class="page max-w-lg mx-auto bg-white p-6 rounded-xl shadow border">
@@ -52,15 +63,13 @@
     </div>
 
     <script>
-        const sb = supabase.createClient(
-            'https://gbohivcpptvejvkehzun.supabase.co', 
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE'
-        );
+        const sb = supabase.createClient('https://gbohivcpptvejvkehzun.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE');
 
         function pindah(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             const target = document.getElementById(id);
             if(target) target.classList.add('active');
+            if(id === 'master_list') loadMasterList();
             if(id === 'input') loadMasterOptions();
             if(id === 'wip_report') loadWipReport();
             if(id === 'stok') loadStok();
@@ -77,13 +86,22 @@
             else { alert("Master Tersimpan!"); location.reload(); }
         }
 
+        async function loadMasterList() {
+            const { data } = await sb.from('master_items').select('*');
+            const tbody = document.getElementById('master-tabel-body');
+            if(data) tbody.innerHTML = data.map(i => `<tr><td class="p-2">${i.customer}</td><td class="p-2">${i.model}</td><td class="p-2">${i.item_name}</td><td class="p-2">${i.proses}</td><td class="p-2"><button onclick="hapusMaster(${i.id})" class="bg-red-500 text-white px-2 py-1 rounded">Hapus</button></td></tr>`).join('');
+        }
+
+        async function hapusMaster(id) {
+            if(!confirm("Yakin ingin menghapus master ini?")) return;
+            await sb.from('master_items').delete().eq('id', id);
+            loadMasterList();
+        }
+
         async function loadMasterOptions() {
             const { data } = await sb.from('master_items').select('*');
             const select = document.getElementById('p_master_select');
-            if(data) {
-                select.innerHTML = '<option value="">-- Pilih Item --</option>' + 
-                    data.map(i => `<option value='${JSON.stringify(i)}'>${i.item_name} (${i.model})</option>`).join('');
-            }
+            if(data) select.innerHTML = '<option value="">-- Pilih Item --</option>' + data.map(i => `<option value='${JSON.stringify(i)}'>${i.item_name} (${i.model})</option>`).join('');
         }
 
         function updateProses() {
@@ -115,64 +133,33 @@
             if(wips) {
                 tbody.innerHTML = wips.map(i => {
                     const master = masters.find(m => m.item_name === i.item_name && m.model === i.model);
-                    const daftarProses = master ? master.proses.split(',').map(p => p.trim()) : [];
-                    const isFinal = (i.proses === daftarProses[daftarProses.length - 1]);
-                    
-                    return `
-                    <tr>
-                        <td class="p-2">${new Date(i.created_at).toLocaleDateString()}</td>
-                        <td class="p-2">${i.customer} / ${i.model} / ${i.item_name}</td>
-                        <td class="p-2">${i.proses}</td>
-                        <td class="p-2">${i.jumlah}</td>
-                        <td class="p-2">
-                            ${isFinal ? 
-                                `<button onclick="selesaikanWIP(${i.id}, '${i.customer} | ${i.model} | ${i.item_name}', ${i.jumlah})" class="bg-green-600 text-white px-2 py-1 rounded text-[9px]">FINISH</button>` : 
-                                `<button onclick="lanjutProses(${i.id}, '${i.item_name}', '${i.customer}', '${i.model}', ${i.jumlah}, '${master?.proses || ''}')" class="bg-blue-500 text-white px-2 py-1 rounded text-[9px]">SPLIT & NEXT</button>`
-                            }
-                        </td>
-                    </tr>`;
+                    const isFinal = (i.proses === (master?.proses.split(',').pop()?.trim()));
+                    return `<tr><td class="p-2">${new Date(i.created_at).toLocaleDateString()}</td><td class="p-2">${i.customer}/${i.model}/${i.item_name}</td><td class="p-2">${i.proses}</td><td class="p-2">${i.jumlah}</td><td class="p-2">${isFinal ? `<button onclick="selesaikanWIP(${i.id}, '${i.customer}|${i.model}|${i.item_name}', ${i.jumlah})" class="bg-green-600 text-white px-2 py-1 rounded text-[9px]">FINISH</button>` : `<button onclick="lanjutProses(${i.id}, '${i.item_name}', '${i.customer}', '${i.model}', ${i.jumlah}, '${master?.proses || ''}')" class="bg-blue-500 text-white px-2 py-1 rounded text-[9px]">SPLIT & NEXT</button>`}</td></tr>`;
                 }).join('');
             }
         }
 
         async function lanjutProses(id, itemName, customer, model, sisaWip, daftarProses) {
-            const jumlahLanjut = prompt(`Total WIP saat ini: ${sisaWip} pcs.\nBerapa jumlah yang ingin diproses ke tahap selanjutnya?`);
+            const jumlahLanjut = prompt(`Total WIP: ${sisaWip}. Jumlah untuk proses lanjut?`);
             const qty = parseInt(jumlahLanjut);
             if (isNaN(qty) || qty <= 0 || qty > sisaWip) return alert("Jumlah tidak valid!");
-
-            const prosesBaru = prompt("Pilih proses selanjutnya:\n" + daftarProses);
+            const prosesBaru = prompt("Pilih proses:\n" + daftarProses);
             if (!prosesBaru || !daftarProses.includes(prosesBaru.trim())) return alert("Proses tidak valid!");
-
-            const { error: errInsert } = await sb.from('wip_logs').insert([{
-                customer, model, item_name: itemName, proses: prosesBaru.trim(), jumlah: qty, is_done: false
-            }]);
-            const { error: errUpdate } = await sb.from('wip_logs').update({ jumlah: sisaWip - qty }).eq('id', id);
-            
-            if (!errInsert && !errUpdate) { alert("Berhasil split batch!"); loadWipReport(); }
-            else alert("Gagal melakukan split batch.");
+            await sb.from('wip_logs').insert([{ customer, model, item_name: itemName, proses: prosesBaru.trim(), jumlah: qty, is_done: false }]);
+            await sb.from('wip_logs').update({ jumlah: sisaWip - qty }).eq('id', id);
+            loadWipReport();
         }
 
         async function selesaikanWIP(id, detail, qty) {
-            if(!confirm("Pindahkan " + detail + " ke Data Stok?")) return;
-            const { error: errS } = await sb.from('stok_data').insert([{ detail, masuk: qty, sisa: qty }]);
-            const { error: errW } = await sb.from('wip_logs').update({ is_done: true }).eq('id', id);
-            if(!errS && !errW) { alert("Berhasil!"); loadWipReport(); }
-            else alert("Error proses.");
+            if(!confirm("Pindahkan ke Data Stok?")) return;
+            await sb.from('stok_data').insert([{ detail, masuk: qty, sisa: qty }]);
+            await sb.from('wip_logs').update({ is_done: true }).eq('id', id);
+            loadWipReport();
         }
 
         async function loadStok() {
             const { data } = await sb.from('stok_data').select('*');
-            const tbody = document.getElementById('tabel-body');
-            if(data) {
-                tbody.innerHTML = data.map(i => `
-                    <tr>
-                        <td class="p-2">${i.detail || '-'}</td>
-                        <td class="p-2">${i.masuk || 0}</td>
-                        <td class="p-2">${i.delivery || 0}</td>
-                        <td class="p-2">${i.sisa || 0}</td>
-                    </tr>
-                `).join('');
-            }
+            document.getElementById('tabel-body').innerHTML = (data || []).map(i => `<tr><td class="p-2">${i.detail || '-'}</td><td class="p-2">${i.masuk || 0}</td><td class="p-2">${i.delivery || 0}</td><td class="p-2">${i.sisa || 0}</td></tr>`).join('');
         }
     </script>
 </body>
