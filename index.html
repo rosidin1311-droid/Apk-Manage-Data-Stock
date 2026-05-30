@@ -9,49 +9,65 @@
         .page.active { display: block; }
     </style>
 </head>
-<body class="p-4 bg-gray-100">
-    <div class="flex gap-2 mb-4">
-        <button onclick="showPage('master')" class="bg-blue-500 text-white p-2 rounded">Master</button>
-        <button onclick="showPage('input')" class="bg-blue-500 text-white p-2 rounded">Input</button>
+<body class="p-4 bg-gray-100 font-sans">
+    <h1 class="text-xl font-bold mb-4 text-center">Corduroy Inventory</h1>
+    
+    <div class="flex justify-between gap-1 mb-6">
+        <button onclick="showPage('master')" class="bg-blue-600 text-white p-2 rounded text-xs">MASTER</button>
+        <button onclick="showPage('input')" class="bg-blue-600 text-white p-2 rounded text-xs">INPUT</button>
+        <button onclick="showPage('wip')" class="bg-blue-600 text-white p-2 rounded text-xs">WIP</button>
+        <button onclick="showPage('stok')" class="bg-blue-600 text-white p-2 rounded text-xs">STOK</button>
     </div>
 
     <div id="master" class="page active p-4 bg-white rounded shadow">
-        <h1 class="font-bold">Halaman Master</h1>
-        <input id="m_input" class="border p-2 w-full mt-2" placeholder="Nama Item">
-        <button onclick="prosesMaster()" class="bg-green-500 text-white p-2 w-full mt-2">Simpan</button>
+        <h2 class="font-bold mb-2">Master Data</h2>
+        <input id="m_input" class="border p-2 w-full" placeholder="Nama Item">
+        <button onclick="prosesMaster()" class="bg-green-600 text-white p-2 w-full mt-2">SIMPAN MASTER</button>
     </div>
 
     <div id="input" class="page p-4 bg-white rounded shadow">
-        <h1 class="font-bold">Halaman Input</h1>
+        <h2 class="font-bold mb-2">Input Produksi</h2>
+        <input id="p_item" class="border p-2 w-full mb-2" placeholder="Nama Item">
+        <input id="p_qty" type="number" class="border p-2 w-full" placeholder="Jumlah">
+        <button onclick="prosesInput()" class="bg-green-600 text-white p-2 w-full mt-2">MULAI PRODUKSI</button>
+    </div>
+
+    <div id="wip" class="page p-4 bg-white rounded shadow">
+        <h2 class="font-bold">Daftar WIP</h2>
+    </div>
+
+    <div id="stok" class="page p-4 bg-white rounded shadow">
+        <h2 class="font-bold">Data Stok</h2>
     </div>
 
     <script>
-        // 1. Inisialisasi Aman
+        // Inisialisasi Supabase Aman
         const supabaseUrl = 'https://gbohivcpptvejvkehzun.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE';
-        
-        // Cek apakah supabase sudah ada untuk menghindari error "already declared"
         window.sb = window.sb || supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 2. Fungsi Navigasi
+        // Fungsi Navigasi
         function showPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             const target = document.getElementById(id);
             if(target) target.classList.add('active');
         }
 
-        // 3. Fungsi Database
+        // Fungsi Database Master
         async function prosesMaster() {
             const val = document.getElementById('m_input').value;
-            if(!val) return alert("Masukkan nama!");
-            
-            try {
-                const { error } = await window.sb.from('items').insert([{ nama_item: val }]);
-                if(error) throw error;
-                alert("Berhasil disimpan!");
-            } catch (err) {
-                alert("Error: " + err.message);
-            }
+            if(!val) return alert("Isi nama item!");
+            const { error } = await window.sb.from('items').insert([{ nama_item: val }]);
+            alert(error ? "Error: " + error.message : "Master tersimpan!");
+        }
+
+        // Fungsi Database Produksi
+        async function prosesInput() {
+            const item = document.getElementById('p_item').value;
+            const qty = document.getElementById('p_qty').value;
+            if(!item || !qty) return alert("Lengkapi data!");
+            const { error } = await window.sb.from('production_logs').insert([{ item_id: item, quantity: qty, status: 'WIP' }]);
+            alert(error ? "Error: " + error.message : "Produksi masuk WIP!");
         }
     </script>
 </body>
