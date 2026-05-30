@@ -18,31 +18,40 @@
     <div id="master" class="page active p-4 bg-white rounded shadow">
         <h1 class="font-bold">Halaman Master</h1>
         <input id="m_input" class="border p-2 w-full mt-2" placeholder="Nama Item">
-        <button onclick="addMaster()" class="bg-green-500 text-white p-2 w-full mt-2">Simpan</button>
+        <button onclick="prosesMaster()" class="bg-green-500 text-white p-2 w-full mt-2">Simpan</button>
     </div>
 
     <div id="input" class="page p-4 bg-white rounded shadow">
         <h1 class="font-bold">Halaman Input</h1>
-        <p>Fitur produksi akan segera aktif.</p>
     </div>
 
     <script>
-        // Inisialisasi Supabase
+        // 1. Inisialisasi Aman
         const supabaseUrl = 'https://gbohivcpptvejvkehzun.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Cek apakah supabase sudah ada untuk menghindari error "already declared"
+        window.sb = window.sb || supabase.createClient(supabaseUrl, supabaseKey);
 
-        // Fungsi Navigasi (Harus ada di sini)
+        // 2. Fungsi Navigasi
         function showPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+            const target = document.getElementById(id);
+            if(target) target.classList.add('active');
         }
 
-        // Fungsi Database
-        async function addMaster() {
+        // 3. Fungsi Database
+        async function prosesMaster() {
             const val = document.getElementById('m_input').value;
-            const { error } = await supabase.from('items').insert([{ nama_item: val }]);
-            alert(error ? error.message : "Berhasil!");
+            if(!val) return alert("Masukkan nama!");
+            
+            try {
+                const { error } = await window.sb.from('items').insert([{ nama_item: val }]);
+                if(error) throw error;
+                alert("Berhasil disimpan!");
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
         }
     </script>
 </body>
