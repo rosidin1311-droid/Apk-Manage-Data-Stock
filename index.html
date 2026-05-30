@@ -1,16 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+    <meta charset="UTF-8">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .page { display: none; }
+        .page.active { display: block; }
+    </style>
 </head>
-<body class="p-10">
-    <button id="test-btn" class="bg-red-500 text-white p-5 text-2xl">KLIK SAYA UNTUK TES</button>
+<body class="bg-slate-50 p-4">
+    <h1 class="text-xl font-bold text-center mb-6">Corduroy Inventory</h1>
     
+    <div class="flex gap-2 mb-6">
+        <button onclick="pindah('master')" class="bg-slate-700 text-white p-2 rounded text-xs">MASTER</button>
+        <button onclick="pindah('input')" class="bg-slate-700 text-white p-2 rounded text-xs">INPUT</button>
+        <button onclick="pindah('stok')" class="bg-slate-700 text-white p-2 rounded text-xs">STOK</button>
+    </div>
+
+    <div id="master" class="page active bg-white p-6 rounded-xl shadow border">
+        <input id="m_input" class="w-full border p-2 mb-2" placeholder="Nama Item">
+        <button onclick="simpanMaster()" class="w-full bg-blue-600 text-white p-2 rounded">SIMPAN</button>
+    </div>
+
+    <div id="stok" class="page bg-white rounded-xl shadow border overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-100 uppercase font-bold text-slate-600">
+                <tr><th class="p-3 text-left">Item</th><th class="p-3 text-left">Status</th></tr>
+            </thead>
+            <tbody id="tabel-body" class="divide-y"></tbody>
+        </table>
+    </div>
+
     <script>
-        document.getElementById('test-btn').addEventListener('click', () => {
-            alert('Sistem Berhasil Merespons!');
-        });
+        // Inisialisasi yang "Anti-Tabrakan"
+        if (!window.sb) {
+            window.sb = supabase.createClient(
+                'https://gbohivcpptvejvkehzun.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE'
+            );
+        }
+
+        function pindah(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'stok') loadStok();
+        }
+
+        async function simpanMaster() {
+            const val = document.getElementById('m_input').value;
+            const { error } = await window.sb.from('items').insert([{ nama_item: val }]);
+            alert(error ? error.message : "Berhasil!");
+        }
+
+        async function loadStok() {
+            const { data } = await window.sb.from('items').select('*');
+            const tbody = document.getElementById('tabel-body');
+            tbody.innerHTML = data.map(i => `<tr><td class="p-3">${i.nama_item}</td><td class="p-3 text-green-600 font-bold">Ready</td></tr>`).join('');
+        }
     </script>
 </body>
 </html>
