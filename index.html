@@ -117,6 +117,7 @@
                     const master = masters.find(m => m.item_name === i.item_name && m.model === i.model);
                     const daftarProses = master ? master.proses.split(',').map(p => p.trim()) : [];
                     const isFinal = (i.proses === daftarProses[daftarProses.length - 1]);
+                    
                     return `
                     <tr>
                         <td class="p-2">${new Date(i.created_at).toLocaleDateString()}</td>
@@ -126,7 +127,7 @@
                         <td class="p-2">
                             ${isFinal ? 
                                 `<button onclick="selesaikanWIP(${i.id}, '${i.customer} | ${i.model} | ${i.item_name}', ${i.jumlah})" class="bg-green-600 text-white px-2 py-1 rounded text-[9px]">FINISH</button>` : 
-                                `<button onclick="lanjutProses(${i.id}, '${i.item_name}', '${master?.proses || ''}')" class="bg-blue-500 text-white px-2 py-1 rounded text-[9px]">NEXT</button>`
+                                `<button onclick="lanjutProses(${i.id}, '${i.item_name}', '${i.customer}', '${i.model}', ${i.jumlah}, '${master?.proses || ''}')" class="bg-blue-500 text-white px-2 py-1 rounded text-[9px]">SPLIT & NEXT</button>`
                             }
                         </td>
                     </tr>`;
@@ -134,12 +135,21 @@
             }
         }
 
-        async function lanjutProses(id, itemName, semuaProses) {
-            const prosesArray = semuaProses.split(',').map(p => p.trim());
-            const prosesBaru = prompt("Pilih proses selanjutnya:\n" + semuaProses);
-            if(!prosesBaru || !prosesArray.includes(prosesBaru.trim())) return alert("Proses tidak valid!");
-            await sb.from('wip_logs').update({ proses: prosesBaru.trim() }).eq('id', id);
-            loadWipReport();
+        async function lanjutProses(id, itemName, customer, model, sisaWip, daftarProses) {
+            const jumlahLanjut = prompt(`Total WIP saat ini: ${sisaWip} pcs.\nBerapa jumlah yang ingin diproses ke tahap selanjutnya?`);
+            const qty = parseInt(jumlahLanjut);
+            if (isNaN(qty) || qty <= 0 || qty > sisaWip) return alert("Jumlah tidak valid!");
+
+            const prosesBaru = prompt("Pilih proses selanjutnya:\n" + daftarProses);
+            if (!prosesBaru || !daftarProses.includes(prosesBaru.trim())) return alert("Proses tidak valid!");
+
+            const { error: errInsert } = await sb.from('wip_logs').insert([{
+                customer, model, item_name: itemName, proses: prosesBaru.trim(), jumlah: qty, is_done: false
+            }]);
+            const { error: errUpdate } = await sb.from('wip_logs').update({ jumlah: sisaWip - qty }).eq('id', id);
+            
+            if (!errInsert && !errUpdate) { alert("Berhasil split batch!"); loadWipReport(); }
+            else alert("Gagal melakukan split batch.");
         }
 
         async function selesaikanWIP(id, detail, qty) {
@@ -158,15 +168,11 @@
                     <tr>
                         <td class="p-2">${i.detail || '-'}</td>
                         <td class="p-2">${i.masuk || 0}</td>
-                        <td class="p-2"><input type="number" class="w-16 border p-1" onchange="updateStok(${i.id}, 'delivery', this.value)" value="${i.delivery || 0}"></td>
-                        <td class="p-2"><input type="number" class="w-16 border p-1" onchange="updateStok(${i.id}, 'sisa', this.value)" value="${i.sisa || 0}"></td>
+                        <td class="p-2">${i.delivery || 0}</td>
+                        <td class="p-2">${i.sisa || 0}</td>
                     </tr>
                 `).join('');
             }
-        }
-
-        async function updateStok(id, field, val) {
-            await sb.from('stok_data').update({[field]: parseInt(val || 0)}).eq('id', id);
         }
     </script>
 </body>
