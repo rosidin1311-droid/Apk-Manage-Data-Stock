@@ -3,97 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corduroy PPIC System - Montserrat Pink Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
-        body { font-family: 'Quicksand', sans-serif; }
-        .page { display: none; } 
-        .page.active { display: block; }
-        /* Custom scrollbar untuk tema pink */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #fdf2f8; }
-        ::-webkit-scrollbar-thumb { background: #f472b6; border-radius: 10px; }
+        * { font-family: 'Montserrat', sans-serif; }
+        body { background: #fdf2f8; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .page { display: none; } .page.active { display: block; }
+        .slide-container { width: 100%; max-width: 1100px; background: #ffffff; border-radius: 24px; box-shadow: 0 10px 25px rgba(244, 114, 182, 0.1); padding: 40px; }
+        .btn-nav { background: #fdf2f8; color: #db2777; padding: 10px 20px; border-radius: 12px; font-weight: 600; font-size: 13px; border: 1px solid #fbcfe8; transition: 0.3s; }
+        .btn-nav.active { background: #db2777; color: #ffffff; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #fce7f3; color: #9d174d; padding: 15px; text-align: left; font-size: 12px; }
+        td { padding: 15px; border-bottom: 1px solid #fdf2f8; font-size: 13px; }
     </style>
 </head>
-<body class="bg-pink-50 p-4 text-gray-700">
-    <h1 class="text-2xl font-bold text-center mb-6 text-pink-600 drop-shadow-sm">DATA STOK  SMD & IKEA</h1>
-    
-    <div class="flex justify-center gap-2 mb-6 text-[10px] flex-wrap">
-        <button onclick="pindah('master_list')" class="bg-pink-500 hover:bg-pink-600 text-white px-3 py-2 rounded-full shadow-md transition-all font-bold">MASTER LIST</button>
-        <button onclick="pindah('master')" class="bg-pink-500 hover:bg-pink-600 text-white px-3 py-2 rounded-full shadow-md transition-all font-bold">ADD MASTER</button>
-        <button onclick="pindah('input')" class="bg-pink-500 hover:bg-pink-600 text-white px-3 py-2 rounded-full shadow-md transition-all font-bold">INPUT WIP</button>
-        <button onclick="pindah('wip_report')" class="bg-pink-500 hover:bg-pink-600 text-white px-3 py-2 rounded-full shadow-md transition-all font-bold">LAPORAN WIP</button>
-        <button onclick="pindah('stok')" class="bg-pink-500 hover:bg-pink-600 text-white px-3 py-2 rounded-full shadow-md transition-all font-bold">DATA STOK</button>
+<body>
+
+    <h1 class="text-2xl font-bold mb-6 text-pink-600"><i class="fa-solid fa-layer-group"></i> CORDUROY PPIC SYSTEM</h1>
+
+    <div class="flex gap-2 mb-8 flex-wrap justify-center">
+        <button onclick="pindah('master_list', this)" class="btn-nav active">MASTER LIST</button>
+        <button onclick="pindah('master', this)" class="btn-nav">ADD MASTER</button>
+        <button onclick="pindah('input', this)" class="btn-nav">INPUT WIP</button>
+        <button onclick="pindah('wip_report', this)" class="btn-nav">LAPORAN WIP</button>
+        <button onclick="pindah('stok', this)" class="btn-nav">DATA STOK</button>
     </div>
 
-    <div id="master" class="page max-w-lg mx-auto bg-white p-6 rounded-2xl shadow-xl border-t-4 border-pink-400">
-        <h2 class="text-pink-600 font-bold mb-4 flex items-center gap-2">✨ Tambah Master Item</h2>
-        <input id="m_cust" class="w-full border-pink-100 border-2 p-2 mb-2 rounded-xl focus:outline-none focus:border-pink-400" placeholder="Customer">
-        <input id="m_model" class="w-full border-pink-100 border-2 p-2 mb-2 rounded-xl focus:outline-none focus:border-pink-400" placeholder="Model">
-        <input id="m_item" class="w-full border-pink-100 border-2 p-2 mb-2 rounded-xl focus:outline-none focus:border-pink-400" placeholder="Nama Item">
-        <input id="m_proses" class="w-full border-pink-100 border-2 p-2 mb-4 rounded-xl focus:outline-none focus:border-pink-400" placeholder="Proses (ex: Potong,Jahit,QC)">
-        <button onclick="simpanMaster()" class="w-full bg-gradient-to-r from-pink-500 to-rose-400 text-white p-3 rounded-xl font-bold shadow-lg">SIMPAN MASTER</button>
+    <div id="master" class="page slide-container">
+        <h2 class="text-pink-600 font-bold mb-4">✨ Tambah Master Item</h2>
+        <input id="m_cust" class="w-full border-2 p-3 mb-2 rounded-xl" placeholder="Customer">
+        <input id="m_model" class="w-full border-2 p-3 mb-2 rounded-xl" placeholder="Model">
+        <input id="m_item" class="w-full border-2 p-3 mb-2 rounded-xl" placeholder="Nama Item">
+        <input id="m_proses" class="w-full border-2 p-3 mb-4 rounded-xl" placeholder="Proses (ex: Potong,Jahit,QC)">
+        <button onclick="simpanMaster()" class="w-full bg-pink-500 text-white p-3 rounded-xl font-bold">SIMPAN MASTER</button>
     </div>
 
-    <div id="master_list" class="page max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-xl border-t-4 border-pink-400">
+    <div id="master_list" class="page slide-container active">
         <h2 class="text-pink-600 font-bold mb-4">📋 Daftar Master Item</h2>
-        <div class="overflow-x-auto">
-            <table class="w-full text-xs text-left">
-                <thead>
-                    <tr class="bg-pink-100 text-pink-700">
-                        <th class="p-3">Customer</th><th class="p-3">Model</th><th class="p-3">Item</th><th class="p-3">Proses</th><th class="p-3">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="master-tabel-body" class="divide-y divide-pink-50"></tbody>
-            </table>
-        </div>
+        <table><thead><tr><th>Customer</th><th>Model</th><th>Item</th><th>Proses</th><th>Aksi</th></tr></thead><tbody id="master-tabel-body"></tbody></table>
     </div>
 
-    <div id="input" class="page max-w-lg mx-auto bg-white p-6 rounded-2xl shadow-xl border-t-4 border-pink-400">
+    <div id="input" class="page slide-container">
         <h2 class="text-pink-600 font-bold mb-4">📝 Input Produksi WIP</h2>
-        <select id="p_master_select" onchange="updateProses()" class="w-full border-pink-100 border-2 p-2 mb-2 rounded-xl focus:outline-none focus:border-pink-400 bg-white"></select>
-        <select id="p_proses" class="w-full border-pink-100 border-2 p-2 mb-2 rounded-xl focus:outline-none focus:border-pink-400 bg-white"></select>
-        <input id="p_qty" type="number" class="w-full border-pink-100 border-2 p-2 mb-4 rounded-xl focus:outline-none focus:border-pink-400" placeholder="Jumlah">
-        <button onclick="simpanWIP()" class="w-full bg-gradient-to-r from-pink-500 to-rose-400 text-white p-3 rounded-xl font-bold shadow-lg">INPUT PRODUKSI</button>
+        <select id="p_master_select" onchange="updateProses()" class="w-full border-2 p-3 mb-2 rounded-xl"></select>
+        <select id="p_proses" class="w-full border-2 p-3 mb-2 rounded-xl"></select>
+        <input id="p_qty" type="number" class="w-full border-2 p-3 mb-4 rounded-xl" placeholder="Jumlah">
+        <button onclick="simpanWIP()" class="w-full bg-pink-500 text-white p-3 rounded-xl font-bold">INPUT PRODUKSI</button>
     </div>
 
-    <div id="wip_report" class="page max-w-5xl mx-auto bg-white p-6 rounded-2xl shadow-xl border-t-4 border-pink-400">
+    <div id="wip_report" class="page slide-container">
         <h2 class="text-pink-600 font-bold mb-4">📊 Laporan Kerja WIP</h2>
-        <div class="overflow-x-auto">
-            <table class="w-full text-xs text-left">
-                <thead>
-                    <tr class="bg-pink-600 text-white">
-                        <th class="p-3">Tgl</th><th class="p-3">Item</th><th class="p-3">Proses</th><th class="p-3">Jml</th><th class="p-3">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="wip-tabel-body" class="divide-y divide-pink-50"></tbody>
-            </table>
-        </div>
+        <table><thead><tr><th>Tgl</th><th>Item/Model</th><th>Proses</th><th>Jml</th><th>Aksi</th></tr></thead><tbody id="wip-tabel-body"></tbody></table>
     </div>
 
-    <div id="stok" class="page max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-xl border-t-4 border-pink-400">
+    <div id="stok" class="page slide-container">
         <h2 class="text-pink-600 font-bold mb-4">📦 Gudang Barang Jadi</h2>
-        <div class="overflow-x-auto">
-            <table class="w-full text-xs text-left">
-                <thead>
-                    <tr class="bg-pink-100 text-pink-700">
-                        <th class="p-3">Detail Barang</th><th class="p-3">Masuk</th><th class="p-3">Delivery</th><th class="p-3">Sisa Stok</th>
-                    </tr>
-                </thead>
-                <tbody id="tabel-body" class="divide-y divide-pink-50"></tbody>
-            </table>
-        </div>
+        <table><thead><tr><th>Detail</th><th>Masuk</th><th>Delivery</th><th>Sisa</th><th>Hapus</th></tr></thead><tbody id="tabel-body"></tbody></table>
     </div>
 
     <script>
-        // INISIALISASI SUPABASE
         const sb = supabase.createClient('https://gbohivcpptvejvkehzun.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE');
 
-        function pindah(id) {
+        function pindah(id, btn) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const target = document.getElementById(id);
-            if(target) target.classList.add('active');
+            document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
             if(id === 'master_list') loadMasterList();
             if(id === 'input') loadMasterOptions();
             if(id === 'wip_report') loadWipReport();
@@ -107,120 +86,74 @@
                 item_name: document.getElementById('m_item').value,
                 proses: document.getElementById('m_proses').value
             }]);
-            if(error) alert("Gagal Simpan: " + error.message);
-            else { alert("✨ Master Berhasil Ditambahkan!"); location.reload(); }
+            if(error) alert(error.message); else { alert("Tersimpan!"); location.reload(); }
         }
 
         async function loadMasterList() {
             const { data } = await sb.from('master_items').select('*');
-            document.getElementById('master-tabel-body').innerHTML = (data||[]).map(i => `
-                <tr class="hover:bg-pink-50 transition-colors">
-                    <td class="p-3">${i.customer}</td>
-                    <td class="p-3">${i.model}</td>
-                    <td class="p-3">${i.item_name}</td>
-                    <td class="p-3 text-pink-500 font-bold">${i.proses}</td>
-                    <td class="p-3"><button onclick="hapusMaster(${i.id})" class="bg-rose-400 text-white px-3 py-1 rounded-lg">Hapus</button></td>
-                </tr>
-            `).join('');
+            document.getElementById('master-tabel-body').innerHTML = (data||[]).map(i => `<tr><td>${i.customer}</td><td>${i.model}</td><td>${i.item_name}</td><td>${i.proses}</td><td><button onclick="hapusMaster(${i.id})" class="text-rose-500"><i class="fa fa-trash"></i></button></td></tr>`).join('');
         }
 
         async function hapusMaster(id) {
-            if(!confirm("Hapus data master ini?")) return;
-            await sb.from('master_items').delete().eq('id', id); loadMasterList();
+            if(confirm("Hapus item?")) { await sb.from('master_items').delete().eq('id', id); loadMasterList(); }
         }
 
         async function loadMasterOptions() {
             const { data } = await sb.from('master_items').select('*');
             const select = document.getElementById('p_master_select');
-            if(data) select.innerHTML = '<option value="">-- Pilih Item --</option>' + data.map(i => `<option value='${JSON.stringify(i)}'>${i.item_name} (${i.model})</option>`).join('');
+            if(data) select.innerHTML = '<option value="">-- Pilih --</option>' + data.map(i => `<option value='${JSON.stringify(i)}'>${i.item_name} (${i.model})</option>`).join('');
         }
 
         function updateProses() {
-            const val = document.getElementById('p_master_select').value;
-            const selectProses = document.getElementById('p_proses');
-            if(!val) { selectProses.innerHTML = ''; return; }
-            const data = JSON.parse(val);
-            selectProses.innerHTML = data.proses.split(',').map(p => `<option>${p.trim()}</option>`).join('');
+            const val = JSON.parse(document.getElementById('p_master_select').value);
+            document.getElementById('p_proses').innerHTML = val.proses.split(',').map(p => `<option>${p.trim()}</option>`).join('');
         }
 
         async function simpanWIP() {
-            const val = document.getElementById('p_master_select').value;
-            if(!val) return alert("Pilih item!");
-            const item = JSON.parse(val);
-            const { error } = await sb.from('wip_logs').insert([{
-                customer: item.customer, model: item.model, item_name: item.item_name,
-                proses: document.getElementById('p_proses').value,
-                jumlah: parseInt(document.getElementById('p_qty').value || 0),
-                is_done: false
-            }]);
-            if(error) alert("Error: " + error.message); else { alert("🚀 Produksi Terinput!"); loadWipReport(); }
+            const item = JSON.parse(document.getElementById('p_master_select').value);
+            await sb.from('wip_logs').insert([{ customer: item.customer, model: item.model, item_name: item.item_name, proses: document.getElementById('p_proses').value, jumlah: parseInt(document.getElementById('p_qty').value || 0), is_done: false }]);
+            alert("Input Berhasil!"); loadWipReport();
         }
 
         async function loadWipReport() {
-            const { data: masters } = await sb.from('master_items').select('*');
-            const { data: wips } = await sb.from('wip_logs').select('*').eq('is_done', false).order('created_at', { ascending: false });
-            const tbody = document.getElementById('wip-tabel-body');
-            if(wips) {
-                tbody.innerHTML = wips.map(i => {
-                    const master = masters.find(m => m.item_name === i.item_name && m.model === i.model);
-                    const listP = master?.proses.split(',').map(p => p.trim()) || [];
-                    const isFinal = (i.proses === listP[listP.length - 1]);
-                    const tgl = i.created_at ? new Date(i.created_at).toLocaleDateString() : '-';
-                    return `
-                    <tr class="hover:bg-pink-50">
-                        <td class="p-3">${tgl}</td>
-                        <td class="p-3 font-semibold">${i.customer}/${i.model}/${i.item_name}</td>
-                        <td class="p-3"><span class="bg-pink-100 text-pink-600 px-2 py-1 rounded">${i.proses}</span></td>
-                        <td class="p-3 font-bold">${i.jumlah}</td>
-                        <td class="p-3">
-                            ${isFinal ? 
-                                `<button onclick="selesaikanWIP(${i.id}, '${i.customer}|${i.model}|${i.item_name}', ${i.jumlah})" class="bg-emerald-500 text-white px-2 py-1 rounded-lg text-[9px] font-bold">FINISH TO STOCK</button>` : 
-                                `<button onclick="lanjutProses(${i.id}, '${i.item_name}', '${i.customer}', '${i.model}', ${i.jumlah}, '${master?.proses || ''}')" class="bg-sky-400 text-white px-2 py-1 rounded-lg text-[9px] font-bold">SPLIT & NEXT</button>`
-                            }
-                        </td>
-                    </tr>`;
-                }).join('');
+            const { data: m } = await sb.from('master_items').select('*');
+            const { data: w } = await sb.from('wip_logs').select('*').eq('is_done', false).order('created_at', { ascending: false });
+            document.getElementById('wip-tabel-body').innerHTML = (w||[]).map(i => {
+                const master = m.find(ma => ma.item_name === i.item_name);
+                const isFinal = (i.proses === master?.proses.split(',').pop()?.trim());
+                return `<tr><td>${i.created_at ? new Date(i.created_at).toLocaleDateString('id-ID') : '-'}</td><td>${i.customer}/${i.model}/${i.item_name}</td><td>${i.proses}</td><td>${i.jumlah}</td><td>${isFinal ? `<button onclick="selesaikanWIP(${i.id}, '${i.customer}|${i.model}|${i.item_name}', ${i.jumlah})" class="bg-emerald-500 text-white px-2 py-1 rounded text-[10px]">FINISH</button>` : `<button onclick="lanjutProses(${i.id}, '${i.item_name}', '${i.customer}', '${i.model}', ${i.jumlah}, '${master?.proses || ''}')" class="bg-sky-500 text-white px-2 py-1 rounded text-[10px]">SPLIT</button>`}</td></tr>`;
+            }).join('');
+        }
+
+        async function lanjutProses(id, name, cust, mod, sisa, proses) {
+            const qty = parseInt(prompt("Total " + sisa + ". Jumlah lanjut?"));
+            if(qty > 0 && qty <= sisa) {
+                const p = prompt("Pilih proses:\n" + proses);
+                await sb.from('wip_logs').insert([{ customer: cust, model: mod, item_name: name, proses: p, jumlah: qty, is_done: false }]);
+                await sb.from('wip_logs').update({ jumlah: sisa - qty }).eq('id', id);
+                loadWipReport();
             }
         }
 
-        async function lanjutProses(id, itemName, customer, model, sisaWip, daftarProses) {
-            const qty = parseInt(prompt(`Total WIP: ${sisaWip}. Berapa jumlah yang lanjut?`));
-            if (isNaN(qty) || qty <= 0 || qty > sisaWip) return alert("Jumlah invalid!");
-            const prosesBaru = prompt("Pilih proses selanjutnya:\n" + daftarProses);
-            if (!prosesBaru || !daftarProses.includes(prosesBaru.trim())) return alert("Proses tidak valid!");
-            
-            await sb.from('wip_logs').insert([{ customer, model, item_name: itemName, proses: prosesBaru.trim(), jumlah: qty, is_done: false }]);
-            await sb.from('wip_logs').update({ jumlah: sisaWip - qty }).eq('id', id);
+        async function selesaikanWIP(id, detail, qty) {
+            await sb.from('stok_data').insert([{ detail, masuk: qty, sisa: qty }]);
+            await sb.from('wip_logs').update({ is_done: true }).eq('id', id);
             loadWipReport();
         }
 
-        async function selesaikanWIP(id, detail, qty) {
-            if(!confirm("Kirim ke Data Stok?")) return;
-            await sb.from('stok_data').insert([{ detail, masuk: qty, sisa: qty }]);
-            await sb.from('wip_logs').update({ is_done: true }).eq('id', id);
-            alert("Barang Jadi Tersimpan!"); loadWipReport();
-        }
-
         async function loadStok() {
-            const { data } = await sb.from('stok_data').select('*').order('id', { ascending: false });
-            document.getElementById('tabel-body').innerHTML = (data || []).map(i => `
-                <tr class="hover:bg-pink-50 transition-all">
-                    <td class="p-3 font-medium">${i.detail || '-'}</td>
-                    <td class="p-3 text-emerald-600 font-bold">${i.masuk || 0}</td>
-                    <td class="p-3 flex items-center gap-1">
-                        <input type="number" id="deliv_${i.id}" class="w-12 border rounded p-1 text-[10px]" value="${i.delivery||0}">
-                        <button onclick="updateStok(${i.id},${i.masuk},document.getElementById('deliv_${i.id}').value)" class="bg-sky-500 text-white px-2 py-1 rounded text-[9px]">OK</button>
-                    </td>
-                    <td class="p-3 text-pink-600 font-bold">${i.sisa || 0}</td>
-                </tr>
-            `).join('');
+            const { data } = await sb.from('stok_data').select('*');
+            document.getElementById('tabel-body').innerHTML = (data||[]).map(i => `<tr><td>${i.detail}</td><td>${i.masuk}</td><td><input type="number" id="d_${i.id}" value="${i.delivery||0}" class="w-12 border p-1 text-[10px]"> <button onclick="updateStok(${i.id}, ${i.masuk}, document.getElementById('d_${i.id}').value)" class="bg-pink-400 text-white p-1 rounded">OK</button></td><td>${i.sisa}</td><td><button onclick="hapusStok(${i.id})" class="text-rose-500"><i class="fa fa-trash"></i></button></td></tr>`).join('');
         }
 
         async function updateStok(id, masuk, val) {
-            const deliv = parseInt(val||0); const sisa = masuk - deliv;
-            if(sisa < 0) return alert("Stok tidak cukup!");
-            await sb.from('stok_data').update({ delivery: deliv, sisa: sisa }).eq('id', id);
-            alert("Stok Updated!"); loadStok();
+            const deliv = parseInt(val||0);
+            await sb.from('stok_data').update({ delivery: deliv, sisa: masuk - deliv }).eq('id', id);
+            loadStok();
+        }
+
+        async function hapusStok(id) {
+            if(confirm("Hapus stok?")) { await sb.from('stok_data').delete().eq('id', id); loadStok(); }
         }
     </script>
 </body>
