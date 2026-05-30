@@ -52,10 +52,10 @@
     </div>
 
     <script>
-        // Inisialisasi
-        const supabaseUrl = 'https://gbohivcpptvejvkehzun.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE';
-        const sb = supabase.createClient(supabaseUrl, supabaseKey);
+        const sb = supabase.createClient(
+            'https://gbohivcpptvejvkehzun.supabase.co', 
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE'
+        );
 
         function pindah(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -101,26 +101,45 @@
             const { error } = await sb.from('wip_logs').insert([{
                 customer: item.customer, model: item.model, item_name: item.item_name,
                 proses: document.getElementById('p_proses').value,
-                jumlah: parseInt(document.getElementById('p_qty').value || 0)
+                jumlah: parseInt(document.getElementById('p_qty').value || 0),
+                is_done: false
             }]);
             if(error) alert("Error: " + error.message);
             else { alert("Produksi Terinput!"); loadWipReport(); }
         }
 
         async function loadWipReport() {
-            const { data } = await sb.from('wip_logs').select('*').eq('is_done', false);
+            const { data: masters } = await sb.from('master_items').select('*');
+            const { data: wips } = await sb.from('wip_logs').select('*').eq('is_done', false);
             const tbody = document.getElementById('wip-tabel-body');
-            if(data) {
-                tbody.innerHTML = data.map(i => `
+            if(wips) {
+                tbody.innerHTML = wips.map(i => {
+                    const master = masters.find(m => m.item_name === i.item_name && m.model === i.model);
+                    const daftarProses = master ? master.proses.split(',').map(p => p.trim()) : [];
+                    const isFinal = (i.proses === daftarProses[daftarProses.length - 1]);
+                    return `
                     <tr>
                         <td class="p-2">${new Date(i.created_at).toLocaleDateString()}</td>
                         <td class="p-2">${i.customer} / ${i.model} / ${i.item_name}</td>
                         <td class="p-2">${i.proses}</td>
                         <td class="p-2">${i.jumlah}</td>
-                        <td class="p-2"><button onclick="selesaikanWIP(${i.id}, '${i.customer} | ${i.model} | ${i.item_name}', ${i.jumlah})" class="bg-green-500 text-white px-2 py-1 rounded text-[9px]">SELESAI</button></td>
-                    </tr>
-                `).join('');
+                        <td class="p-2">
+                            ${isFinal ? 
+                                `<button onclick="selesaikanWIP(${i.id}, '${i.customer} | ${i.model} | ${i.item_name}', ${i.jumlah})" class="bg-green-600 text-white px-2 py-1 rounded text-[9px]">FINISH</button>` : 
+                                `<button onclick="lanjutProses(${i.id}, '${i.item_name}', '${master?.proses || ''}')" class="bg-blue-500 text-white px-2 py-1 rounded text-[9px]">NEXT</button>`
+                            }
+                        </td>
+                    </tr>`;
+                }).join('');
             }
+        }
+
+        async function lanjutProses(id, itemName, semuaProses) {
+            const prosesArray = semuaProses.split(',').map(p => p.trim());
+            const prosesBaru = prompt("Pilih proses selanjutnya:\n" + semuaProses);
+            if(!prosesBaru || !prosesArray.includes(prosesBaru.trim())) return alert("Proses tidak valid!");
+            await sb.from('wip_logs').update({ proses: prosesBaru.trim() }).eq('id', id);
+            loadWipReport();
         }
 
         async function selesaikanWIP(id, detail, qty) {
