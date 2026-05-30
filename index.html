@@ -26,7 +26,7 @@
     </nav>
 
     <main class="px-4">
-        <div id="master" class="page active space-y-4">
+        <div id="master" class="page ">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-50">
                 <h3 class="font-bold mb-3">Kelola Master</h3>
                 <input id="m_input" class="w-full p-3 border border-pink-200 rounded-xl mb-2" placeholder="Nama Item/Customer/Proses">
@@ -35,7 +35,7 @@
             <div id="list-master" class="text-sm"></div>
         </div>
 
-        <div id="input" class="page space-y-4">
+        <div id="input" class="page hidden">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-50">
                 <select id="p_item" class="w-full p-3 border border-pink-200 rounded-xl mb-2"></select>
                 <input id="p_qty" type="number" class="w-full p-3 border border-pink-200 rounded-xl mb-2" placeholder="Jumlah">
@@ -43,12 +43,12 @@
             </div>
         </div>
 
-        <div id="wip" class="page space-y-4">
+        <div id="wip" class="page hidden">
             <button onclick="exportCSV('production_logs')" class="bg-emerald-500 text-white w-full py-2 rounded-lg text-sm">Download WIP (CSV)</button>
             <div id="list-wip" class="space-y-3"></div>
         </div>
 
-        <div id="stok" class="page space-y-4">
+        <div id="stok" class="page hidden">
             <div id="list-stok" class="space-y-3"></div>
             <hr>
             <div class="bg-white p-4 rounded-xl shadow-sm">
@@ -60,16 +60,29 @@
     </main>
 
     <script>
-        // 1. Inisialisasi Supabase
-        const supabaseUrl = 'https://gbohivcpptvejvkehzun.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE';
-        const supabase = supabaseClient.createClient(supabaseUrl, supabaseKey);
+    // 1. Inisialisasi Supabase
+    const supabaseUrl = 'https://gbohivcpptvejvkehzun.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE';
+    const supabase = supabaseClient.createClient(supabaseUrl, supabaseKey);
 
-        // 2. Navigasi Logic
-        function showPage(id) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+    // 2. Fungsi Navigasi yang Benar
+    function showPage(id) {
+        // Sembunyikan semua div dengan class 'page'
+        document.querySelectorAll('.page').forEach(p => {
+            p.classList.add('hidden');
+        });
+        
+        // Tampilkan hanya yang dipilih
+        const target = document.getElementById(id);
+        if (target) {
+            target.classList.remove('hidden');
         }
+    }
+
+    // Jalankan saat load
+    document.addEventListener('DOMContentLoaded', () => {
+        showPage('master');
+    });
 
         // 3. Logic Data
         async function saveProduction() {
