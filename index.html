@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .page { display: none; }
-        .active { display: block; }
+        .active { display: block !important; }
     </style>
 </head>
 <body class="bg-[#f8f1f1] text-[#5c4d4d] font-sans pb-10">
@@ -26,98 +26,61 @@
     </nav>
 
     <main class="px-4">
-        <div id="master" class="page ">
+        <div id="master" class="page active">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-50">
                 <h3 class="font-bold mb-3">Kelola Master</h3>
-                <input id="m_input" class="w-full p-3 border border-pink-200 rounded-xl mb-2" placeholder="Nama Item/Customer/Proses">
+                <input id="m_input" class="w-full p-3 border border-pink-200 rounded-xl mb-2" placeholder="Nama Item">
                 <button onclick="addMaster()" class="w-full bg-[#d8a7b1] text-white py-3 rounded-xl font-bold">SIMPAN MASTER</button>
             </div>
-            <div id="list-master" class="text-sm"></div>
         </div>
 
-        <div id="input" class="page hidden">
+        <div id="input" class="page">
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-50">
-                <select id="p_item" class="w-full p-3 border border-pink-200 rounded-xl mb-2"></select>
+                <input id="p_item" class="w-full p-3 border border-pink-200 rounded-xl mb-2" placeholder="Nama Item">
                 <input id="p_qty" type="number" class="w-full p-3 border border-pink-200 rounded-xl mb-2" placeholder="Jumlah">
                 <button onclick="saveProduction()" class="w-full bg-[#d8a7b1] text-white py-3 rounded-xl font-bold">MULAI PRODUKSI</button>
             </div>
         </div>
 
-        <div id="wip" class="page hidden">
-            <button onclick="exportCSV('production_logs')" class="bg-emerald-500 text-white w-full py-2 rounded-lg text-sm">Download WIP (CSV)</button>
-            <div id="list-wip" class="space-y-3"></div>
+        <div id="wip" class="page">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-50">
+                <h3 class="font-bold mb-3">Daftar WIP</h3>
+                <div id="list-wip"></div>
+            </div>
         </div>
 
-        <div id="stok" class="page hidden">
-            <div id="list-stok" class="space-y-3"></div>
-            <hr>
-            <div class="bg-white p-4 rounded-xl shadow-sm">
-                <input id="d_id" class="w-full p-2 border rounded-lg mb-2" placeholder="Nama Item">
-                <input id="d_qty" type="number" class="w-full p-2 border rounded-lg mb-2" placeholder="Qty Delivery">
-                <button onclick="prosesDelivery()" class="w-full bg-red-400 text-white py-2 rounded-lg font-bold">EXECUTE DELIVERY</button>
-            </div>
+        <div id="stok" class="page">
+            <div id="list-stok" class="bg-white p-5 rounded-2xl shadow-sm border border-pink-50"></div>
         </div>
     </main>
 
     <script>
-    // 1. Inisialisasi Supabase
-    const supabaseUrl = 'https://gbohivcpptvejvkehzun.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE';
-    const supabase = supabaseClient.createClient(supabaseUrl, supabaseKey);
+        // 1. Inisialisasi Supabase (Gunakan supabase.createClient)
+        const supabaseUrl = 'https://gbohivcpptvejvkehzun.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // 2. Fungsi Navigasi yang Benar
-    function showPage(id) {
-        // Sembunyikan semua div dengan class 'page'
-        document.querySelectorAll('.page').forEach(p => {
-            p.classList.add('hidden');
-        });
-        
-        // Tampilkan hanya yang dipilih
-        const target = document.getElementById(id);
-        if (target) {
-            target.classList.remove('hidden');
+        // 2. Navigasi Logic
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
         }
-    }
 
-    // Jalankan saat load
-    document.addEventListener('DOMContentLoaded', () => {
-        showPage('master');
-    });
+        // 3. Fungsi Tambah Master
+        async function addMaster() {
+            const val = document.getElementById('m_input').value;
+            const { error } = await supabase.from('items').insert([{ nama_item: val }]);
+            if(error) alert(error.message);
+            else alert("Master ditambah!");
+        }
 
-        // 3. Logic Data
+        // 4. Fungsi Input Produksi
         async function saveProduction() {
-            try {
-                const item = document.getElementById('p_item').value;
-                const qty = document.getElementById('p_qty').value;
-                const { error } = await supabase.from('production_logs').insert([{ item_id: item, quantity: qty, status: 'WIP' }]);
-                if(error) throw error;
-                alert("Data masuk WIP!");
-                location.reload();
-            } catch(e) { alert("Error: " + e.message); }
-        }
-
-        async function prosesDelivery() {
-            const item = document.getElementById('d_id').value;
-            const qty = parseInt(document.getElementById('d_qty').value);
-            
-            const { data: st } = await supabase.from('stock').select('total_qty').eq('item_id', item).single();
-            if(st) {
-                await supabase.from('stock').update({ total_qty: st.total_qty - qty }).eq('item_id', item);
-                alert("Delivery berhasil!");
-                location.reload();
-            } else {
-                alert("Item tidak ditemukan di stok!");
-            }
-        }
-
-        // 4. Utility: Export CSV
-        async function exportCSV(table) {
-            const { data } = await supabase.from(table).select('*');
-            let csv = "ID,Item,Qty\n";
-            data.forEach(d => csv += `${d.id},${d.item_id},${d.quantity}\n`);
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'data.csv'; a.click();
+            const item = document.getElementById('p_item').value;
+            const qty = document.getElementById('p_qty').value;
+            const { error } = await supabase.from('production_logs').insert([{ item_id: item, quantity: qty, status: 'WIP' }]);
+            if(error) alert(error.message);
+            else alert("Masuk WIP!");
         }
     </script>
 </body>
