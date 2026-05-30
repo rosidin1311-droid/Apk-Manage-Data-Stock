@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Corduroy Stock</title>
+    <title>Corduroy Inventory</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -11,45 +11,76 @@
         .page.active { display: block; }
     </style>
 </head>
-<body class="bg-[#f8f1f1] p-4">
+<body class="bg-[#f8f1f1] text-[#5c4d4d] font-sans pb-10">
 
-    <div class="flex gap-2 mb-6">
-        <button onclick="showPage('master')" class="bg-rose-300 p-2 rounded text-white">Master</button>
-        <button onclick="showPage('input')" class="bg-rose-300 p-2 rounded text-white">Input</button>
-        <button onclick="showPage('wip')" class="bg-rose-300 p-2 rounded text-white">WIP</button>
-    </div>
+    <header class="bg-[#d8a7b1] p-6 text-white shadow-lg rounded-b-[2rem] mb-6">
+        <h1 class="text-2xl font-bold">Corduroy Inventory</h1>
+    </header>
 
-    <div id="master" class="page active">
-        <h2 class="font-bold">Master Item</h2>
-        <input id="m_input" class="border p-2 w-full" placeholder="Nama Item Baru">
-        <button onclick="addMaster()" class="bg-rose-400 text-white p-2 w-full mt-2">Tambah</button>
-    </div>
+    <nav class="flex justify-around p-4 gap-2">
+        <button onclick="showPage('master')" class="bg-white px-4 py-2 rounded-xl shadow border border-pink-100 font-semibold text-xs">MASTER</button>
+        <button onclick="showPage('input')" class="bg-white px-4 py-2 rounded-xl shadow border border-pink-100 font-semibold text-xs">INPUT</button>
+        <button onclick="showPage('wip')" class="bg-white px-4 py-2 rounded-xl shadow border border-pink-100 font-semibold text-xs">WIP</button>
+        <button onclick="showPage('stok')" class="bg-white px-4 py-2 rounded-xl shadow border border-pink-100 font-semibold text-xs">STOK</button>
+    </nav>
 
-    <div id="input" class="page">
-        <h2 class="font-bold">Input Produksi</h2>
+    <main class="px-4">
+        <div id="master" class="page active">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-50">
+                <h3 class="font-bold mb-3">Master Data</h3>
+                <input id="m_input" class="w-full p-3 border border-pink-200 rounded-xl mb-2" placeholder="Input Nama Item/Customer">
+                <button onclick="addMaster()" class="w-full bg-[#d8a7b1] text-white py-3 rounded-xl font-bold">SIMPAN MASTER</button>
+            </div>
         </div>
 
-    <div id="wip" class="page">
-        <h2 class="font-bold">WIP Data</h2>
-    </div>
+        <div id="input" class="page">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-50">
+                <input id="p_item" class="w-full p-3 border border-pink-200 rounded-xl mb-2" placeholder="Nama Item">
+                <input id="p_qty" type="number" class="w-full p-3 border border-pink-200 rounded-xl mb-2" placeholder="Jumlah">
+                <button onclick="saveProduction()" class="w-full bg-[#d8a7b1] text-white py-3 rounded-xl font-bold">MULAI PRODUKSI</button>
+            </div>
+        </div>
+
+        <div id="wip" class="page">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-50">
+                <h3 class="font-bold mb-3">Daftar WIP</h3>
+                <div id="list-wip"></div>
+            </div>
+        </div>
+
+        <div id="stok" class="page">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-pink-50">
+                <h3 class="font-bold mb-3">Data Stok & Delivery</h3>
+                <div id="list-stok"></div>
+            </div>
+        </div>
+    </main>
 
     <script>
-        // 1. Inisialisasi Supabase (Hanya sekali)
+        // Inisialisasi Supabase (Satu kali saja)
         const supabaseUrl = 'https://gbohivcpptvejvkehzun.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // 2. Navigasi
+        // Fungsi Navigasi
         function showPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
 
-        // 3. Fungsi Master
+        // Fungsi Master
         async function addMaster() {
             const val = document.getElementById('m_input').value;
             const { error } = await supabase.from('items').insert([{ nama_item: val }]);
-            alert(error ? "Gagal: " + error.message : "Berhasil!");
+            alert(error ? "Error: " + error.message : "Data Tersimpan!");
+        }
+
+        // Fungsi Input
+        async function saveProduction() {
+            const item = document.getElementById('p_item').value;
+            const qty = document.getElementById('p_qty').value;
+            const { error } = await supabase.from('production_logs').insert([{ item_id: item, quantity: qty, status: 'WIP' }]);
+            alert(error ? "Error: " + error.message : "Berhasil masuk WIP!");
         }
     </script>
 </body>
