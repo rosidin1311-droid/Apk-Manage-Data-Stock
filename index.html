@@ -10,30 +10,25 @@
 <body class="bg-slate-50 p-4">
     <h1 class="text-xl font-bold text-center mb-6">Corduroy PPIC System</h1>
     
-    <div class="flex justify-center gap-2 mb-6 text-[10px]">
-        <button onclick="pindah('master_list')" class="bg-slate-700 text-white px-3 py-2 rounded">MASTER LIST</button>
-        <button onclick="pindah('master')" class="bg-slate-700 text-white px-3 py-2 rounded">MASTER</button>
-        <button onclick="pindah('input')" class="bg-slate-700 text-white px-3 py-2 rounded">INPUT WIP</button>
-        <button onclick="pindah('wip_report')" class="bg-slate-700 text-white px-3 py-2 rounded">LAPORAN WIP</button>
-        <button onclick="pindah('stok')" class="bg-slate-700 text-white px-3 py-2 rounded">DATA STOK</button>
+    <div class="flex justify-center gap-1 mb-6 text-[9px] flex-wrap">
+        <button onclick="pindah('master_list')" class="bg-slate-700 text-white px-2 py-1 rounded">MASTER LIST</button>
+        <button onclick="pindah('master')" class="bg-slate-700 text-white px-2 py-1 rounded">ADD MASTER</button>
+        <button onclick="pindah('input')" class="bg-slate-700 text-white px-2 py-1 rounded">INPUT WIP</button>
+        <button onclick="pindah('wip_report')" class="bg-slate-700 text-white px-2 py-1 rounded">LAPORAN WIP</button>
+        <button onclick="pindah('stok')" class="bg-slate-700 text-white px-2 py-1 rounded">DATA STOK</button>
     </div>
 
-    <div id="master" class="page active max-w-lg mx-auto bg-white p-6 rounded-xl shadow border">
+    <div id="master" class="page max-w-lg mx-auto bg-white p-6 rounded-xl shadow border">
         <input id="m_cust" class="w-full border p-2 mb-2 rounded" placeholder="Customer">
         <input id="m_model" class="w-full border p-2 mb-2 rounded" placeholder="Model">
         <input id="m_item" class="w-full border p-2 mb-2 rounded" placeholder="Nama Item">
-        <input id="m_proses" class="w-full border p-2 mb-4 rounded" placeholder="Proses (ex: Potong,Jahit,QC)">
+        <input id="m_proses" class="w-full border p-2 mb-4 rounded" placeholder="Proses (Contoh: Potong,Jahit,QC)">
         <button onclick="simpanMaster()" class="w-full bg-blue-600 text-white p-2 rounded font-bold">SIMPAN MASTER</button>
     </div>
 
     <div id="master_list" class="page max-w-4xl mx-auto bg-white p-6 rounded-xl shadow border">
         <h2 class="font-bold mb-4">Daftar Master Item</h2>
-        <table class="w-full text-xs text-left">
-            <thead class="bg-slate-800 text-white">
-                <tr><th class="p-2">Customer</th><th class="p-2">Model</th><th class="p-2">Item</th><th class="p-2">Proses</th><th class="p-2">Aksi</th></tr>
-            </thead>
-            <tbody id="master-tabel-body"></tbody>
-        </table>
+        <table class="w-full text-xs text-left"><thead class="bg-slate-800 text-white"><tr><th class="p-2">Customer</th><th class="p-2">Model</th><th class="p-2">Item</th><th class="p-2">Proses</th><th class="p-2">Aksi</th></tr></thead><tbody id="master-tabel-body"></tbody></table>
     </div>
 
     <div id="input" class="page max-w-lg mx-auto bg-white p-6 rounded-xl shadow border">
@@ -44,22 +39,12 @@
     </div>
 
     <div id="wip_report" class="page max-w-4xl mx-auto bg-white p-6 rounded-xl shadow border">
-        <h2 class="font-bold mb-4">Laporan WIP (Work In Progress)</h2>
-        <table class="w-full text-xs text-left">
-            <thead class="bg-slate-800 text-white">
-                <tr><th class="p-2">Tgl</th><th class="p-2">Item</th><th class="p-2">Proses</th><th class="p-2">Jml</th><th class="p-2">Aksi</th></tr>
-            </thead>
-            <tbody id="wip-tabel-body"></tbody>
-        </table>
+        <h2 class="font-bold mb-4">Laporan WIP</h2>
+        <table class="w-full text-xs text-left"><thead class="bg-slate-800 text-white"><tr><th class="p-2">Tgl</th><th class="p-2">Item</th><th class="p-2">Proses</th><th class="p-2">Jml</th><th class="p-2">Aksi</th></tr></thead><tbody id="wip-tabel-body"></tbody></table>
     </div>
 
     <div id="stok" class="page max-w-4xl mx-auto bg-white p-4 rounded-xl shadow border overflow-x-auto">
-        <table class="w-full text-xs text-left">
-            <thead class="bg-slate-800 text-white">
-                <tr><th class="p-2">Detail</th><th class="p-2">Masuk</th><th class="p-2">Deliv</th><th class="p-2">Sisa</th></tr>
-            </thead>
-            <tbody id="tabel-body"></tbody>
-        </table>
+        <table class="w-full text-xs text-left"><thead class="bg-slate-800 text-white"><tr><th class="p-2">Detail</th><th class="p-2">Masuk</th><th class="p-2">Deliv</th><th class="p-2">Sisa</th></tr></thead><tbody id="tabel-body"></tbody></table>
     </div>
 
     <script>
@@ -88,14 +73,12 @@
 
         async function loadMasterList() {
             const { data } = await sb.from('master_items').select('*');
-            const tbody = document.getElementById('master-tabel-body');
-            if(data) tbody.innerHTML = data.map(i => `<tr><td class="p-2">${i.customer}</td><td class="p-2">${i.model}</td><td class="p-2">${i.item_name}</td><td class="p-2">${i.proses}</td><td class="p-2"><button onclick="hapusMaster(${i.id})" class="bg-red-500 text-white px-2 py-1 rounded">Hapus</button></td></tr>`).join('');
+            document.getElementById('master-tabel-body').innerHTML = (data||[]).map(i => `<tr><td class="p-2">${i.customer}</td><td class="p-2">${i.model}</td><td class="p-2">${i.item_name}</td><td class="p-2">${i.proses}</td><td class="p-2"><button onclick="hapusMaster(${i.id})" class="bg-red-500 text-white px-2 py-1 rounded">Hapus</button></td></tr>`).join('');
         }
 
         async function hapusMaster(id) {
-            if(!confirm("Yakin ingin menghapus master ini?")) return;
-            await sb.from('master_items').delete().eq('id', id);
-            loadMasterList();
+            if(!confirm("Hapus master ini?")) return;
+            await sb.from('master_items').delete().eq('id', id); loadMasterList();
         }
 
         async function loadMasterOptions() {
@@ -114,7 +97,7 @@
 
         async function simpanWIP() {
             const val = document.getElementById('p_master_select').value;
-            if(!val) return alert("Pilih item dulu!");
+            if(!val) return alert("Pilih item!");
             const item = JSON.parse(val);
             const { error } = await sb.from('wip_logs').insert([{
                 customer: item.customer, model: item.model, item_name: item.item_name,
@@ -122,8 +105,7 @@
                 jumlah: parseInt(document.getElementById('p_qty').value || 0),
                 is_done: false
             }]);
-            if(error) alert("Error: " + error.message);
-            else { alert("Produksi Terinput!"); loadWipReport(); }
+            if(error) alert("Error: " + error.message); else { alert("Produksi Terinput!"); loadWipReport(); }
         }
 
         async function loadWipReport() {
@@ -134,15 +116,16 @@
                 tbody.innerHTML = wips.map(i => {
                     const master = masters.find(m => m.item_name === i.item_name && m.model === i.model);
                     const isFinal = (i.proses === (master?.proses.split(',').pop()?.trim()));
-                    return `<tr><td class="p-2">${new Date(i.created_at).toLocaleDateString()}</td><td class="p-2">${i.customer}/${i.model}/${i.item_name}</td><td class="p-2">${i.proses}</td><td class="p-2">${i.jumlah}</td><td class="p-2">${isFinal ? `<button onclick="selesaikanWIP(${i.id}, '${i.customer}|${i.model}|${i.item_name}', ${i.jumlah})" class="bg-green-600 text-white px-2 py-1 rounded text-[9px]">FINISH</button>` : `<button onclick="lanjutProses(${i.id}, '${i.item_name}', '${i.customer}', '${i.model}', ${i.jumlah}, '${master?.proses || ''}')" class="bg-blue-500 text-white px-2 py-1 rounded text-[9px]">SPLIT & NEXT</button>`}</td></tr>`;
+                    const tgl = i.created_at ? new Date(i.created_at).toLocaleDateString() : '-';
+                    return `<tr><td class="p-2">${tgl}</td><td class="p-2">${i.customer}/${i.model}/${i.item_name}</td><td class="p-2">${i.proses}</td><td class="p-2">${i.jumlah}</td><td class="p-2">${isFinal ? `<button onclick="selesaikanWIP(${i.id}, '${i.customer}|${i.model}|${i.item_name}', ${i.jumlah})" class="bg-green-600 text-white px-2 py-1 rounded text-[9px]">FINISH</button>` : `<button onclick="lanjutProses(${i.id}, '${i.item_name}', '${i.customer}', '${i.model}', ${i.jumlah}, '${master?.proses || ''}')" class="bg-blue-500 text-white px-2 py-1 rounded text-[9px]">SPLIT & NEXT</button>`}</td></tr>`;
                 }).join('');
             }
         }
 
         async function lanjutProses(id, itemName, customer, model, sisaWip, daftarProses) {
-            const jumlahLanjut = prompt(`Total WIP: ${sisaWip}. Jumlah untuk proses lanjut?`);
+            const jumlahLanjut = prompt(`Total WIP: ${sisaWip}. Jumlah lanjut?`);
             const qty = parseInt(jumlahLanjut);
-            if (isNaN(qty) || qty <= 0 || qty > sisaWip) return alert("Jumlah tidak valid!");
+            if (isNaN(qty) || qty <= 0 || qty > sisaWip) return alert("Jumlah invalid!");
             const prosesBaru = prompt("Pilih proses:\n" + daftarProses);
             if (!prosesBaru || !daftarProses.includes(prosesBaru.trim())) return alert("Proses tidak valid!");
             await sb.from('wip_logs').insert([{ customer, model, item_name: itemName, proses: prosesBaru.trim(), jumlah: qty, is_done: false }]);
@@ -159,7 +142,14 @@
 
         async function loadStok() {
             const { data } = await sb.from('stok_data').select('*');
-            document.getElementById('tabel-body').innerHTML = (data || []).map(i => `<tr><td class="p-2">${i.detail || '-'}</td><td class="p-2">${i.masuk || 0}</td><td class="p-2">${i.delivery || 0}</td><td class="p-2">${i.sisa || 0}</td></tr>`).join('');
+            document.getElementById('tabel-body').innerHTML = (data || []).map(i => `<tr><td class="p-2">${i.detail || '-'}</td><td class="p-2">${i.masuk || 0}</td><td class="p-2"><input type="number" id="deliv_${i.id}" class="w-12 border p-1" value="${i.delivery||0}"> <button onclick="updateStok(${i.id},${i.masuk},document.getElementById('deliv_${i.id}').value)" class="bg-blue-600 text-white px-1 rounded">OK</button></td><td class="p-2">${i.sisa || 0}</td></tr>`).join('');
+        }
+
+        async function updateStok(id, masuk, val) {
+            const deliv = parseInt(val||0); const sisa = masuk - deliv;
+            if(sisa < 0) return alert("Error: Deliv > Masuk!");
+            await sb.from('stok_data').update({ delivery: deliv, sisa: sisa }).eq('id', id);
+            alert("Stok diupdate!"); loadStok();
         }
     </script>
 </body>
