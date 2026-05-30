@@ -2,95 +2,99 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>.page { display: none; } .page.active { display: block; }</style>
 </head>
 <body class="bg-slate-50 p-4">
-    <h1 class="text-xl font-bold text-center mb-6">Corduroy Inventory</h1>
+    <h1 class="text-xl font-bold text-center mb-6">Corduroy PPIC System</h1>
     
-    <div class="flex justify-center gap-2 mb-6">
-        <button onclick="pindah('master')" class="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold">MASTER</button>
-        <button onclick="pindah('input')" class="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold">INPUT</button>
-        <button onclick="pindah('stok')" class="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold">STOK</button>
+    <div class="flex justify-center gap-2 mb-6 text-[10px]">
+        <button onclick="pindah('master')" class="bg-slate-700 text-white px-3 py-2 rounded">MASTER</button>
+        <button onclick="pindah('input')" class="bg-slate-700 text-white px-3 py-2 rounded">INPUT WIP</button>
+        <button onclick="pindah('stok')" class="bg-slate-700 text-white px-3 py-2 rounded">STOK</button>
     </div>
 
-    <div id="master" class="page active max-w-lg mx-auto bg-white p-6 rounded-2xl shadow border">
-        <h2 class="font-bold mb-4">Master Item</h2>
-        <input id="m_input" class="w-full border p-3 rounded-lg mb-2" placeholder="Nama Item Baru">
-        <button onclick="simpanMaster()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold">SIMPAN</button>
+    <div id="master" class="page active max-w-lg mx-auto bg-white p-6 rounded-xl shadow border">
+        <input id="m_cust" class="w-full border p-2 mb-2 rounded" placeholder="Customer">
+        <input id="m_model" class="w-full border p-2 mb-2 rounded" placeholder="Model">
+        <input id="m_item" class="w-full border p-2 mb-2 rounded" placeholder="Nama Item">
+        <input id="m_proses" class="w-full border p-2 mb-4 rounded" placeholder="Proses (ex: Potong,Jahit,QC)">
+        <button onclick="simpanMaster()" class="w-full bg-blue-600 text-white p-2 rounded font-bold">SIMPAN MASTER</button>
     </div>
 
-    <div id="input" class="page max-w-lg mx-auto bg-white p-6 rounded-2xl shadow border">
-        <h2 class="font-bold mb-4">Input Produksi</h2>
-        <input id="p_item" class="w-full border p-3 mb-2 rounded" placeholder="Nama Item">
-        <input id="p_qty" type="number" class="w-full border p-3 mb-4 rounded" placeholder="Jumlah">
-        <button onclick="simpanProduksi()" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold">PROSES PRODUKSI</button>
+    <div id="input" class="page max-w-lg mx-auto bg-white p-6 rounded-xl shadow border">
+        <select id="p_master_select" onchange="updateProses()" class="w-full border p-2 mb-2 rounded"></select>
+        <select id="p_proses" class="w-full border p-2 mb-2 rounded"></select>
+        <input id="p_qty" type="number" class="w-full border p-2 mb-4 rounded" placeholder="Jumlah">
+        <button onclick="simpanWIP()" class="w-full bg-green-600 text-white p-2 rounded font-bold">INPUT PRODUKSI</button>
     </div>
 
-    <div id="stok" class="page max-w-4xl mx-auto">
-        <input type="text" id="search" onkeyup="filterStok()" class="w-full p-3 mb-4 border rounded-xl shadow-sm" placeholder="🔍 Cari item...">
-        <div class="bg-white rounded-2xl shadow border overflow-hidden">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-800 text-white font-bold">
-                    <tr><th class="p-4 text-left">Item</th><th class="p-4 text-center">Status</th><th class="p-4 text-center">Aksi</th></tr>
-                </thead>
-                <tbody id="tabel-body" class="divide-y"></tbody>
-            </table>
-        </div>
+    <div id="stok" class="page max-w-4xl mx-auto bg-white p-4 rounded-xl shadow border overflow-x-auto">
+        <table class="w-full text-xs text-left">
+            <thead class="bg-slate-800 text-white">
+                <tr><th class="p-2">Detail Item</th><th class="p-2">Masuk</th><th class="p-2">Deliv</th><th class="p-2">Sisa</th></tr>
+            </thead>
+            <tbody id="tabel-body"></tbody>
+        </table>
     </div>
 
     <script>
-        if (!window.sb) {
-            window.sb = supabase.createClient('https://gbohivcpptvejvkehzun.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE');
-        }
+        const supabase = supabase.createClient('https://gbohivcpptvejvkehzun.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE');
 
         function pindah(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            if(id === 'input') loadMasterOptions();
             if(id === 'stok') loadStok();
         }
 
         async function simpanMaster() {
-            const val = document.getElementById('m_input').value;
-            await window.sb.from('items').insert([{ nama_item: val }]);
-            alert("Berhasil!"); document.getElementById('m_input').value = '';
+            await supabase.from('master_items').insert([{
+                customer: document.getElementById('m_cust').value,
+                model: document.getElementById('m_model').value,
+                item_name: document.getElementById('m_item').value,
+                proses: document.getElementById('m_proses').value
+            }]);
+            alert("Master Tersimpan!");
+        }
+
+        async function loadMasterOptions() {
+            const { data } = await supabase.from('master_items').select('*');
+            const select = document.getElementById('p_master_select');
+            select.innerHTML = data.map(i => `<option value='${JSON.stringify(i)}'>${i.item_name}</option>`).join('');
+            updateProses();
+        }
+
+        function updateProses() {
+            const data = JSON.parse(document.getElementById('p_master_select').value);
+            document.getElementById('p_proses').innerHTML = data.proses.split(',').map(p => `<option>${p.trim()}</option>`).join('');
+        }
+
+        async function simpanWIP() {
+            const item = JSON.parse(document.getElementById('p_master_select').value);
+            await supabase.from('wip_logs').insert([{
+                customer: item.customer, model: item.model, item_name: item.item_name,
+                proses: document.getElementById('p_proses').value,
+                jumlah: document.getElementById('p_qty').value
+            }]);
+            alert("Produksi Terinput!");
         }
 
         async function loadStok() {
-            const { data } = await window.sb.from('items').select('*');
-            const tbody = document.getElementById('tabel-body');
-            tbody.innerHTML = data.map(i => `
-                <tr class="hover:bg-slate-50">
-                    <td class="p-4">${i.nama_item}</td>
-                    <td class="p-4 text-center"><span class="px-2 py-1 rounded-full text-xs font-bold ${!i.qty || i.qty < 5 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">${!i.qty || i.qty < 5 ? 'STOK TIPIS' : 'READY'}</span></td>
-                    <td class="p-4 text-center">
-                        <button onclick="keProduksi('${i.nama_item}')" class="text-blue-600 font-bold mr-4">WIP</button>
-                        <button onclick="hapusItem('${i.id}')" class="text-red-500 font-bold">HAPUS</button>
-                    </td>
+            const { data } = await supabase.from('stok_data').select('*');
+            document.getElementById('tabel-body').innerHTML = data.map(i => `
+                <tr>
+                    <td class="p-2">${i.detail}</td>
+                    <td class="p-2">${i.masuk}</td>
+                    <td class="p-2"><input type="number" class="w-12 border" onchange="updateStok(${i.id}, 'delivery', this.value)" value="${i.delivery}"></td>
+                    <td class="p-2"><input type="number" class="w-12 border" onchange="updateStok(${i.id}, 'sisa', this.value)" value="${i.sisa}"></td>
                 </tr>
             `).join('');
         }
 
-        function filterStok() {
-            const q = document.getElementById('search').value.toLowerCase();
-            document.querySelectorAll('#tabel-body tr').forEach(r => {
-                r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none';
-            });
-        }
-
-        async function keProduksi(nama) {
-            const qty = prompt("Jumlah produksi untuk " + nama);
-            if (!qty) return;
-            await window.sb.from('production_logs').insert([{ item_id: nama, quantity: parseInt(qty) }]);
-            alert("Data masuk log produksi!");
-        }
-
-        async function hapusItem(id) {
-            if(!confirm("Yakin hapus?")) return;
-            await window.sb.from('items').delete().eq('id', id);
-            loadStok();
+        async function updateStok(id, field, val) {
+            await supabase.from('stok_data').update({[field]: val}).eq('id', id);
         }
     </script>
 </body>
