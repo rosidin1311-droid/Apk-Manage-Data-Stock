@@ -9,65 +9,56 @@
         .page.active { display: block; }
     </style>
 </head>
-<body class="p-4 bg-gray-100 font-sans">
-    <h1 class="text-xl font-bold mb-4 text-center">Corduroy Inventory</h1>
+<body class="p-4 bg-slate-50 font-sans">
+    <h1 class="text-xl font-bold mb-4 text-center text-slate-800">Corduroy Inventory</h1>
     
-    <div class="flex justify-between gap-1 mb-6">
-        <button onclick="showPage('master')" class="bg-blue-600 text-white p-2 rounded text-xs">MASTER</button>
-        <button onclick="showPage('input')" class="bg-blue-600 text-white p-2 rounded text-xs">INPUT</button>
-        <button onclick="showPage('wip')" class="bg-blue-600 text-white p-2 rounded text-xs">WIP</button>
-        <button onclick="showPage('stok')" class="bg-blue-600 text-white p-2 rounded text-xs">STOK</button>
-    </div>
+    <nav class="flex justify-between gap-1 mb-6">
+        <button onclick="showPage('master')" class="bg-slate-700 text-white p-2 rounded text-xs font-bold">MASTER</button>
+        <button onclick="showPage('input')" class="bg-slate-700 text-white p-2 rounded text-xs font-bold">INPUT</button>
+        <button onclick="showPage('wip')" class="bg-slate-700 text-white p-2 rounded text-xs font-bold" onclick="loadData()">WIP</button>
+        <button onclick="showPage('stok')" class="bg-slate-700 text-white p-2 rounded text-xs font-bold" onclick="loadData()">STOK</button>
+    </nav>
 
-    <div id="master" class="page active p-4 bg-white rounded shadow">
-        <h2 class="font-bold mb-2">Master Data</h2>
-        <input id="m_input" class="border p-2 w-full" placeholder="Nama Item">
-        <button onclick="prosesMaster()" class="bg-green-600 text-white p-2 w-full mt-2">SIMPAN MASTER</button>
-    </div>
-
-    <div id="input" class="page p-4 bg-white rounded shadow">
-        <h2 class="font-bold mb-2">Input Produksi</h2>
-        <input id="p_item" class="border p-2 w-full mb-2" placeholder="Nama Item">
-        <input id="p_qty" type="number" class="border p-2 w-full" placeholder="Jumlah">
-        <button onclick="prosesInput()" class="bg-green-600 text-white p-2 w-full mt-2">MULAI PRODUKSI</button>
-    </div>
-
-    <div id="wip" class="page p-4 bg-white rounded shadow">
-        <h2 class="font-bold">Daftar WIP</h2>
-    </div>
-
-    <div id="stok" class="page p-4 bg-white rounded shadow">
-        <h2 class="font-bold">Data Stok</h2>
+    <div id="stok" class="page p-4 bg-white rounded-xl shadow-sm border border-slate-200">
+        <h2 class="font-bold mb-4 text-slate-700">Data Stok Terkini</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-slate-100 text-slate-600 uppercase font-bold">
+                    <tr>
+                        <th class="p-3">Item</th>
+                        <th class="p-3">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tabel-stok" class="divide-y divide-slate-100">
+                    </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
-        // Inisialisasi Supabase Aman
         const supabaseUrl = 'https://gbohivcpptvejvkehzun.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE';
         window.sb = window.sb || supabase.createClient(supabaseUrl, supabaseKey);
 
-        // Fungsi Navigasi
         function showPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const target = document.getElementById(id);
-            if(target) target.classList.add('active');
+            document.getElementById(id).classList.add('active');
+            if(id === 'stok') loadData(); // Auto-load data saat buka halaman stok
         }
 
-        // Fungsi Database Master
-        async function prosesMaster() {
-            const val = document.getElementById('m_input').value;
-            if(!val) return alert("Isi nama item!");
-            const { error } = await window.sb.from('items').insert([{ nama_item: val }]);
-            alert(error ? "Error: " + error.message : "Master tersimpan!");
-        }
-
-        // Fungsi Database Produksi
-        async function prosesInput() {
-            const item = document.getElementById('p_item').value;
-            const qty = document.getElementById('p_qty').value;
-            if(!item || !qty) return alert("Lengkapi data!");
-            const { error } = await window.sb.from('production_logs').insert([{ item_id: item, quantity: qty, status: 'WIP' }]);
-            alert(error ? "Error: " + error.message : "Produksi masuk WIP!");
+        async function loadData() {
+            const { data, error } = await window.sb.from('items').select('*');
+            const tbody = document.getElementById('tabel-stok');
+            tbody.innerHTML = ''; // Reset tabel
+            
+            if (data) {
+                data.forEach(item => {
+                    tbody.innerHTML += `<tr>
+                        <td class="p-3">${item.nama_item}</td>
+                        <td class="p-3 text-green-600 font-bold">Ready</td>
+                    </tr>`;
+                });
+            }
         }
     </script>
 </body>
