@@ -13,7 +13,8 @@
     <div class="flex justify-center gap-2 mb-6 text-[10px]">
         <button onclick="pindah('master')" class="bg-slate-700 text-white px-3 py-2 rounded">MASTER</button>
         <button onclick="pindah('input')" class="bg-slate-700 text-white px-3 py-2 rounded">INPUT WIP</button>
-        <button onclick="pindah('stok')" class="bg-slate-700 text-white px-3 py-2 rounded">STOK</button>
+        <button onclick="pindah('wip_report')" class="bg-slate-700 text-white px-3 py-2 rounded">LAPORAN WIP</button>
+        <button onclick="pindah('stok')" class="bg-slate-700 text-white px-3 py-2 rounded">DATA STOK</button>
     </div>
 
     <div id="master" class="page active max-w-lg mx-auto bg-white p-6 rounded-xl shadow border">
@@ -31,6 +32,16 @@
         <button onclick="simpanWIP()" class="w-full bg-green-600 text-white p-2 rounded font-bold">INPUT PRODUKSI</button>
     </div>
 
+    <div id="wip_report" class="page max-w-4xl mx-auto bg-white p-6 rounded-xl shadow border">
+        <h2 class="font-bold mb-4">Laporan WIP (Work In Progress)</h2>
+        <table class="w-full text-xs text-left">
+            <thead class="bg-slate-800 text-white">
+                <tr><th class="p-2">Tgl</th><th class="p-2">Customer/Model/Item</th><th class="p-2">Proses</th><th class="p-2">Jml</th></tr>
+            </thead>
+            <tbody id="wip-tabel-body"></tbody>
+        </table>
+    </div>
+
     <div id="stok" class="page max-w-4xl mx-auto bg-white p-4 rounded-xl shadow border overflow-x-auto">
         <table class="w-full text-xs text-left">
             <thead class="bg-slate-800 text-white">
@@ -40,8 +51,7 @@
         </table>
     </div>
 
-    <<script>
-        // Inisialisasi Aman
+    <script>
         if (typeof window.supabaseClient === 'undefined') {
             window.supabaseClient = supabase.createClient(
                 'https://gbohivcpptvejvkehzun.supabase.co', 
@@ -54,33 +64,23 @@
             const target = document.getElementById(id);
             if (target) target.classList.add('active');
             if (id === 'input') loadMasterOptions();
+            if (id === 'wip_report') loadWipReport();
             if (id === 'stok') loadStok();
         }
 
         async function simpanMaster() {
-            const cust = document.getElementById('m_cust');
-            const model = document.getElementById('m_model');
-            const item = document.getElementById('m_item');
-            const proses = document.getElementById('m_proses');
-
             const { error } = await window.supabaseClient.from('master_items').insert([{
-                customer: cust.value,
-                model: model.value,
-                item_name: item.value,
-                proses: proses.value
+                customer: document.getElementById('m_cust').value,
+                model: document.getElementById('m_model').value,
+                item_name: document.getElementById('m_item').value,
+                proses: document.getElementById('m_proses').value
             }]);
-            
-            if (error) {
-                alert("Error: " + error.message);
-            } else {
-                alert("Master Tersimpan!");
-                // Bersihkan kolom
-                cust.value = ''; model.value = ''; item.value = ''; proses.value = '';
-            }
+            if (error) alert("Error: " + error.message);
+            else { alert("Master Tersimpan!"); location.reload(); }
         }
 
         async function loadMasterOptions() {
-            const { data, error } = await window.supabaseClient.from('master_items').select('*');
+            const { data } = await window.supabaseClient.from('master_items').select('*');
             const select = document.getElementById('p_master_select');
             if (data) {
                 select.innerHTML = '<option value="">-- Pilih Item --</option>' + 
@@ -92,31 +92,33 @@
             const val = document.getElementById('p_master_select').value;
             const selectProses = document.getElementById('p_proses');
             if (!val) { selectProses.innerHTML = ''; return; }
-            
             const data = JSON.parse(val);
             selectProses.innerHTML = data.proses.split(',').map(p => `<option>${p.trim()}</option>`).join('');
         }
 
         async function simpanWIP() {
-            const selectElement = document.getElementById('p_master_select');
-            const qtyInput = document.getElementById('p_qty');
-            
-            if (!selectElement.value) return alert("Pilih Item dulu!");
-            
-            const item = JSON.parse(selectElement.value);
+            const item = JSON.parse(document.getElementById('p_master_select').value);
             const { error } = await window.supabaseClient.from('wip_logs').insert([{
-                customer: item.customer, 
-                model: item.model, 
-                item_name: item.item_name,
+                customer: item.customer, model: item.model, item_name: item.item_name,
                 proses: document.getElementById('p_proses').value,
-                jumlah: parseInt(qtyInput.value)
+                jumlah: parseInt(document.getElementById('p_qty').value)
             }]);
-            
-            if (error) {
-                alert("Gagal Input WIP: " + error.message);
-            } else {
-                alert("Produksi Terinput ke Log WIP!");
-                qtyInput.value = ''; // Bersihkan jumlah
+            if (error) alert("Error: " + error.message);
+            else { alert("Berhasil!"); loadWipReport(); }
+        }
+
+        async function loadWipReport() {
+            const { data } = await window.supabaseClient.from('wip_logs').select('*');
+            const tbody = document.getElementById('wip-tabel-body');
+            if (data) {
+                tbody.innerHTML = data.map(i => `
+                    <tr>
+                        <td class="p-2">${new Date(i.created_at).toLocaleDateString()}</td>
+                        <td class="p-2">${i.customer} / ${i.model} / ${i.item_name}</td>
+                        <td class="p-2">${i.proses}</td>
+                        <td class="p-2">${i.jumlah}</td>
+                    </tr>
+                `).join('');
             }
         }
 
