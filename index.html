@@ -69,21 +69,20 @@
 <script>
     const sb = supabase.createClient('https://gbohivcpptvejvkehzun.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE');
 
-    // Navigasi Pindah Halaman
+    // --- NAVIGASI ---
     function pindah(id, btn) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(btn) btn.classList.add('active');
-        
-        // Panggil fungsi data setiap pindah halaman
-        if(id === 'master_list') loadMasterList();
-        if(id === 'input') loadMasterOptions();
-        if(id === 'wip_report') loadWipReport();
-        if(id === 'stok') loadStok();
+        if (btn) btn.classList.add('active');
+
+        if (id === 'master_list') loadMasterList();
+        if (id === 'input') loadMasterOptions();
+        if (id === 'wip_report') loadWipReport();
+        if (id === 'stok') loadStok();
     }
 
-    // --- MASTER LOGIC ---
+    // --- MASTER DATA LOGIC ---
     async function simpanMaster() {
         const { error } = await sb.from('master_items').insert([{
             customer: document.getElementById('m_cust').value,
@@ -91,29 +90,41 @@
             item_name: document.getElementById('m_item').value,
             proses: document.getElementById('m_proses').value
         }]);
-        if(error) alert(error.message); else { alert("Master Tersimpan!"); location.reload(); }
+        if (error) alert(error.message);
+        else { alert("Master Tersimpan!"); location.reload(); }
     }
 
     async function loadMasterList() {
         const { data } = await sb.from('master_items').select('*');
         const body = document.getElementById('master-tabel-body');
-        if(body) body.innerHTML = (data||[]).map(i => `<tr><td>${i.customer}</td><td>${i.model}</td><td>${i.item_name}</td><td>${i.proses}</td><td><button onclick="hapusMaster(${i.id})" class="text-rose-500"><i class="fa fa-trash"></i></button></td></tr>`).join('');
+        if (body) body.innerHTML = (data || []).map(i => `
+            <tr>
+                <td>${i.customer}</td>
+                <td>${i.model}</td>
+                <td>${i.item_name}</td>
+                <td>${i.proses}</td>
+                <td><button onclick="hapusMaster(${i.id})" class="text-rose-500"><i class="fa fa-trash"></i></button></td>
+            </tr>
+        `).join('');
     }
 
     async function hapusMaster(id) {
-        if(confirm("Hapus item?")) { await sb.from('master_items').delete().eq('id', id); loadMasterList(); }
+        if (confirm("Hapus item?")) {
+            await sb.from('master_items').delete().eq('id', id);
+            loadMasterList();
+        }
     }
 
     // --- INPUT WIP LOGIC ---
     async function loadMasterOptions() {
         const { data } = await sb.from('master_items').select('*');
         const select = document.getElementById('p_master_select');
-        if(!select) return;
+        if (!select) return;
         select.innerHTML = '<option value="">-- Pilih Item --</option>';
-        if(data) data.forEach(i => {
+        if (data) data.forEach(i => {
             const opt = document.createElement('option');
             opt.value = JSON.stringify(i);
-            opt.textContent = i.item_name + ' (' + i.model + ')';
+            opt.textContent = `${i.item_name} (${i.model})`;
             select.appendChild(opt);
         });
     }
@@ -121,48 +132,51 @@
     function updateProses() {
         const sel = document.getElementById('p_master_select');
         const target = document.getElementById('p_proses');
-        if(!sel.value) return;
+        if (!sel.value) return;
         const val = JSON.parse(sel.value);
         target.innerHTML = val.proses.split(',').map(p => `<option>${p.trim()}</option>`).join('');
     }
 
     async function simpanWIP() {
         const sel = document.getElementById('p_master_select');
-        if(!sel.value) return alert("Pilih item!");
+        if (!sel.value) return alert("Pilih item!");
         const item = JSON.parse(sel.value);
-        const { error } = await sb.from('wip_logs').insert([{ 
-            customer: item.customer, 
-            model: item.model, 
-            item_name: item.item_name, 
-            proses: document.getElementById('p_proses').value, 
-            jumlah: parseInt(document.getElementById('p_qty').value || 0), 
-            is_done: false,
-            created_at: new Date().toISOString()
+
+        const { error } = await sb.from('wip_logs').insert([{
+            customer: item.customer,
+            model: item.model,
+            item_name: item.item_name,
+            proses: document.getElementById('p_proses').value,
+            jumlah: parseInt(document.getElementById('p_qty').value || 0),
+            is_done: false
         }]);
-        if(error) alert("Error: " + error.message); else { alert("Input Berhasil!"); loadWipReport(); }
+
+        if (error) alert("Error Database: " + error.message);
+        else { alert("Input Berhasil!"); loadWipReport(); }
     }
 
-    // --- LAPORAN WIP & STOK ---
+    // --- LAPORAN & STOK LOGIC ---
     async function loadWipReport() {
         const { data: m } = await sb.from('master_items').select('*');
         const { data: w } = await sb.from('wip_logs').select('*');
         const tbody = document.getElementById('wip-tabel-body');
-        if(!tbody) return;
-        
-        tbody.innerHTML = (w||[]).filter(i => !i.is_done).map(i => {
+        if (!tbody) return;
+
+        const tglHariIni = new Date().toLocaleDateString('id-ID');
+
+        tbody.innerHTML = (w || []).filter(i => !i.is_done).map(i => {
             const master = m.find(ma => ma.item_name === i.item_name);
             const isFinal = (i.proses === master?.proses.split(',').pop()?.trim());
-            const tgl = new Date().toLocaleDateString('id-ID'); '-';
+
             return `<tr>
-                <td>${tgl}</td>
+                <td>${tglHariIni}</td>
                 <td>${i.customer}/${i.model}/${i.item_name}</td>
                 <td>${i.proses}</td>
                 <td>${i.jumlah}</td>
                 <td>
-                    ${isFinal ? 
-                        `<button onclick="selesaikanWIP(${i.id}, '${i.customer}|${i.model}|${i.item_name}', ${i.jumlah})" class="bg-emerald-500 text-white px-2 py-1 rounded text-[10px]">FINISH</button>` : 
-                        `<button onclick="lanjutProses(${i.id}, '${i.item_name}', '${i.customer}', '${i.model}', ${i.jumlah}, '${master?.proses || ''}')" class="bg-sky-500 text-white px-2 py-1 rounded text-[10px]">SPLIT</button>`
-                    }
+                    ${isFinal ?
+                    `<button onclick="selesaikanWIP(${i.id}, '${i.customer}|${i.model}|${i.item_name}', ${i.jumlah})" class="bg-emerald-500 text-white px-2 py-1 rounded text-[10px]">FINISH</button>` :
+                    `<button onclick="lanjutProses(${i.id}, '${i.item_name}', '${i.customer}', '${i.model}', ${i.jumlah}, '${master?.proses || ''}')" class="bg-sky-500 text-white px-2 py-1 rounded text-[10px]">SPLIT</button>`}
                     <button onclick="hapusWIP(${i.id})" class="text-rose-500 ml-2"><i class="fa fa-trash"></i></button>
                 </td>
             </tr>`;
@@ -170,15 +184,20 @@
     }
 
     async function hapusWIP(id) {
-        if(confirm("Hapus data WIP ini?")) { await sb.from('wip_logs').delete().eq('id', id); loadWipReport(); }
+        if (confirm("Hapus data WIP ini?")) {
+            await sb.from('wip_logs').delete().eq('id', id);
+            loadWipReport();
+        }
     }
 
     async function lanjutProses(id, name, cust, mod, sisa, proses) {
-        const qty = parseInt(prompt("Total " + sisa + ". Jumlah lanjut?"));
-        if(qty > 0 && qty <= sisa) {
+        const qty = parseInt(prompt(`Total ${sisa}. Jumlah lanjut?`));
+        if (qty > 0 && qty <= sisa) {
             const p = prompt("Pilih proses:\n" + proses);
-            if(!p) return;
-            await sb.from('wip_logs').insert([{ customer: cust, model: mod, item_name: name, proses: p, jumlah: qty, is_done: false, created_at: new Date().toISOString() }]);
+            if (!p) return;
+            await sb.from('wip_logs').insert([{ 
+                customer: cust, model: mod, item_name: name, proses: p, jumlah: qty, is_done: false 
+            }]);
             await sb.from('wip_logs').update({ jumlah: sisa - qty }).eq('id', id);
             loadWipReport();
         }
@@ -193,16 +212,30 @@
     async function loadStok() {
         const { data } = await sb.from('stok_data').select('*');
         const body = document.getElementById('tabel-body');
-        if(body) body.innerHTML = (data||[]).map(i => `<tr><td>${i.detail}</td><td>${i.masuk}</td><td><input type="number" id="d_${i.id}" value="${i.delivery||0}" class="w-12 border p-1 text-[10px]"> <button onclick="updateStok(${i.id}, ${i.masuk}, document.getElementById('d_${i.id}').value)" class="bg-pink-400 text-white p-1 rounded">OK</button></td><td>${i.sisa}</td><td><button onclick="hapusStok(${i.id})" class="text-rose-500"><i class="fa fa-trash"></i></button></td></tr>`).join('');
+        if (body) body.innerHTML = (data || []).map(i => `
+            <tr>
+                <td>${i.detail}</td>
+                <td>${i.masuk}</td>
+                <td>
+                    <input type="number" id="d_${i.id}" value="${i.delivery || 0}" class="w-12 border p-1 text-[10px]"> 
+                    <button onclick="updateStok(${i.id}, ${i.masuk}, document.getElementById('d_${i.id}').value)" class="bg-pink-400 text-white p-1 rounded">OK</button>
+                </td>
+                <td>${i.sisa}</td>
+                <td><button onclick="hapusStok(${i.id})" class="text-rose-500"><i class="fa fa-trash"></i></button></td>
+            </tr>
+        `).join('');
     }
 
     async function updateStok(id, masuk, val) {
-        const deliv = parseInt(val||0);
+        const deliv = parseInt(val || 0);
         await sb.from('stok_data').update({ delivery: deliv, sisa: masuk - deliv }).eq('id', id);
         loadStok();
     }
 
     async function hapusStok(id) {
-        if(confirm("Hapus stok?")) { await sb.from('stok_data').delete().eq('id', id); loadStok(); }
+        if (confirm("Hapus stok?")) {
+            await sb.from('stok_data').delete().eq('id', id);
+            loadStok();
+        }
     }
 </script>
