@@ -7,115 +7,69 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        * { font-family: 'Montserrat', sans-serif; }
         .page { display: none; } .page.active { display: block; }
-        .btn-nav.active { background: #db2777 !important; color: white; }
-        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .sidebar { transform: translateX(-100%); transition: 0.3s; }
+        .sidebar.open { transform: translateX(0); }
     </style>
 </head>
-<body class="bg-pink-50 p-3">
+<body class="bg-pink-50 font-sans">
 
-    <h1 class="text-xl font-bold mb-4 text-pink-600 text-center uppercase">Aplikasi Data Stok 2.0</h1>
-
-    <div class="flex gap-1 mb-4 overflow-x-auto pb-2 justify-center">
-        <button onclick="pindah('master_list', this)" class="btn-nav active px-3 py-2 rounded-lg bg-white border border-pink-200 text-xs font-semibold">MASTER</button>
-        <button onclick="pindah('add_master', this)" class="btn-nav px-3 py-2 rounded-lg bg-white border border-pink-200 text-xs font-semibold">ADD</button>
-        <button onclick="pindah('input_wip', this)" class="btn-nav px-3 py-2 rounded-lg bg-white border border-pink-200 text-xs font-semibold">INPUT</button>
-        <button onclick="pindah('wip_report', this)" class="btn-nav px-3 py-2 rounded-lg bg-white border border-pink-200 text-xs font-semibold">LAPORAN</button>
-        <button onclick="pindah('stok', this)" class="btn-nav px-3 py-2 rounded-lg bg-white border border-pink-200 text-xs font-semibold">STOK</button>
+    <div class="bg-white p-4 flex justify-between items-center shadow-md">
+        <h1 class="text-pink-600 font-bold uppercase">Data Stok 2.0</h1>
+        <button onclick="toggleSidebar()" class="text-pink-600 text-2xl">☰</button>
     </div>
 
-    <div class="max-w-lg mx-auto bg-white p-4 rounded-xl shadow-md min-h-[400px]">
-        
-        <div id="master_list" class="page active">
-            <h2 class="font-bold text-pink-600 mb-3 text-sm">📋 Daftar Master</h2>
-            <div class="table-container"><table class="w-full text-[11px] border text-left" id="t-master"><thead><tr class="bg-pink-100"><th>Cust</th><th>Model</th><th>Item</th><th>Proses</th></tr></thead><tbody id="master-tabel-body"></tbody></table></div>
-        </div>
-
-        <div id="input_wip" class="page">
-            <h2 class="font-bold text-pink-600 mb-3 text-sm">📝 Input Produksi</h2>
-            <select id="p_master_select" onchange="updateProses()" class="w-full border p-2 mb-2 rounded text-xs"></select>
-            <select id="p_proses" class="w-full border p-2 mb-2 rounded text-xs"></select>
-            <input id="p_qty" type="number" class="w-full border p-2 mb-3 rounded text-xs" placeholder="Jumlah">
-            <button onclick="simpanWIP()" class="w-full bg-pink-500 text-white p-2 rounded text-xs font-bold">SIMPAN PRODUKSI</button>
-        </div>
-
-        <div id="wip_report" class="page">
-            <h2 class="font-bold text-pink-600 mb-3 text-sm">📊 Laporan WIP</h2>
-            <div class="flex gap-2 mb-3">
-                <select id="filter_cust" onchange="loadWipReport()" class="border p-2 rounded text-xs w-full"></select>
-                <button onclick="exportExcel('wip-table')" class="bg-green-600 text-white px-3 py-2 rounded text-xs font-bold">Excel</button>
-            </div>
-            <div class="table-container">
-                <table id="wip-table" class="w-full text-[10px] border">
-                    <thead class="bg-pink-100"><tr><th>Item</th><th>Prs</th><th>Jml</th><th>NG</th><th>Aksi</th></tr></thead>
-                    <tbody id="wip-tabel-body"></tbody>
-                </table>
-            </div>
-        </div>
+    <div id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 bg-pink-600 z-50 p-5 text-white">
+        <button onclick="toggleSidebar()" class="mb-5 text-xl">✕ Tutup</button>
+        <nav class="flex flex-col gap-4">
+            <button onclick="nav('master_list')">MASTER LIST</button>
+            <button onclick="nav('add_master')">ADD MASTER</button>
+            <button onclick="nav('input_wip')">INPUT WIP</button>
+            <button onclick="nav('wip_report')">LAPORAN</button>
+            <button onclick="nav('stok')">DATA STOK</button>
+        </nav>
     </div>
 
-    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-        <div class="bg-white p-5 rounded-lg w-full max-w-sm">
-            <h3 class="font-bold mb-3">Koreksi Data</h3>
-            <input type="hidden" id="edit_id">
-            <label class="text-xs">Jumlah</label>
-            <input id="edit_jml" type="number" class="w-full border p-2 mb-2 rounded">
-            <label class="text-xs">NG (Reject)</label>
-            <input id="edit_ng" type="number" class="w-full border p-2 mb-4 rounded">
-            <div class="flex gap-2">
-                <button onclick="saveKoreksi()" class="bg-pink-500 text-white p-2 rounded w-full">SIMPAN</button>
-                <button onclick="document.getElementById('editModal').classList.add('hidden')" class="bg-gray-300 p-2 rounded w-full">BATAL</button>
-            </div>
+    <div class="p-4">
+        <div id="add_master" class="page max-w-sm mx-auto bg-white p-5 rounded-xl shadow">
+            <h2 class="font-bold text-pink-600 mb-4">Tambah Master</h2>
+            <input id="m_cust" class="w-full border p-2 mb-2 rounded" placeholder="Customer">
+            <input id="m_model" class="w-full border p-2 mb-2 rounded" placeholder="Model">
+            <input id="m_item" class="w-full border p-2 mb-2 rounded" placeholder="Item">
+            <input id="m_proses" class="w-full border p-2 mb-4 rounded" placeholder="Proses (ex: Potong,Jahit)">
+            <button onclick="simpanMaster()" class="w-full bg-pink-500 text-white p-3 rounded font-bold">SIMPAN</button>
         </div>
+
+        <div id="master_list" class="page active text-center mt-10">Daftar Master...</div>
     </div>
 
 <script>
     const sb = supabase.createClient('https://gbohivcpptvejvkehzun.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE');
 
-    function pindah(id, btn) {
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+    function nav(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(btn) btn.classList.add('active');
+        toggleSidebar();
     }
 
-    async function loadWipReport() {
-        const { data: w } = await sb.from('wip_logs').select('*');
-        const filter = document.getElementById('filter_cust').value;
-        const tbody = document.getElementById('wip-tabel-body');
-        tbody.innerHTML = (w||[]).filter(i => !i.is_done && (!filter || i.customer === filter)).map(i => `
-            <tr>
-                <td class="p-1 border">${i.item_name}</td>
-                <td class="p-1 border">${i.proses}</td>
-                <td class="p-1 border">${i.jumlah}</td>
-                <td class="p-1 border">${i.ng || 0}</td>
-                <td class="p-1 border">
-                    <button onclick="openModal(${i.id}, ${i.jumlah}, ${i.ng||0})" class="text-blue-500 font-bold">Edit</button>
-                </td>
-            </tr>`).join('');
-    }
+    // Pastikan fungsi ini dipanggil dengan benar
+    async function simpanMaster() {
+        const cust = document.getElementById('m_cust').value;
+        const model = document.getElementById('m_model').value;
+        const item = document.getElementById('m_item').value;
+        const proses = document.getElementById('m_proses').value;
 
-    function openModal(id, jml, ng) {
-        document.getElementById('edit_id').value = id;
-        document.getElementById('edit_jml').value = jml;
-        document.getElementById('edit_ng').value = ng;
-        document.getElementById('editModal').classList.remove('hidden');
-    }
+        if(!cust || !item) return alert("Isi data dengan lengkap!");
 
-    async function saveKoreksi() {
-        await sb.from('wip_logs').update({ 
-            jumlah: parseInt(document.getElementById('edit_jml').value), 
-            ng: parseInt(document.getElementById('edit_ng').value) 
-        }).eq('id', document.getElementById('edit_id').value);
-        document.getElementById('editModal').classList.add('hidden');
-        loadWipReport();
-    }
-
-    function exportExcel(id) {
-        XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById(id)), "Laporan.xlsx");
+        const { error } = await sb.from('master_items').insert([{
+            customer: cust, model: model, item_name: item, proses: proses
+        }]);
+        
+        if(error) alert("Gagal: " + error.message);
+        else { alert("Berhasil!"); location.reload(); }
     }
 </script>
 </body>
