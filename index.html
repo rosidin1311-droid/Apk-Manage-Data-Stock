@@ -7,41 +7,49 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .page { display: none; } .page.active { display: block; }
-        .sidebar { transform: translateX(-100%); transition: 0.3s; }
+        .sidebar { transform: translateX(-100%); transition: 0.4s; }
         .sidebar.open { transform: translateX(0); }
+        .menu-item { @apply flex items-center gap-4 p-4 hover:bg-pink-500 transition-all border-b border-pink-500; }
     </style>
 </head>
 <body class="bg-pink-50 font-sans">
 
-    <div class="bg-white p-4 flex justify-between items-center shadow-md">
-        <h1 class="text-pink-600 font-bold uppercase">Data Stok 2.0</h1>
-        <button onclick="toggleSidebar()" class="text-pink-600 text-2xl">☰</button>
+    <div class="bg-white p-4 flex justify-between items-center shadow-lg sticky top-0 z-40">
+        <h1 class="text-pink-600 font-bold text-xl uppercase tracking-widest">Stok 2.0</h1>
+        <button onclick="toggleSidebar()" class="text-pink-600 text-2xl"><i class="fa fa-bars"></i></button>
     </div>
 
-    <div id="sidebar" class="sidebar fixed top-0 left-0 h-full w-64 bg-pink-600 z-50 p-5 text-white">
-        <button onclick="toggleSidebar()" class="mb-5 text-xl">✕ Tutup</button>
-        <nav class="flex flex-col gap-4">
-            <button onclick="nav('master_list')">MASTER LIST</button>
-            <button onclick="nav('add_master')">ADD MASTER</button>
-            <button onclick="nav('input_wip')">INPUT WIP</button>
-            <button onclick="nav('wip_report')">LAPORAN</button>
-            <button onclick="nav('stok')">DATA STOK</button>
+    <div id="sidebar" class="sidebar fixed top-0 left-0 h-full w-72 bg-pink-600 z-50 p-0 text-white shadow-2xl">
+        <div class="p-6 bg-pink-700 flex justify-between items-center">
+            <h2 class="font-bold text-lg">Menu Utama</h2>
+            <button onclick="toggleSidebar()" class="text-xl"><i class="fa fa-times"></i></button>
+        </div>
+        <nav class="flex flex-col">
+            <button onclick="nav('master_list', loadMasterList)" class="menu-item"><i class="fa fa-list"></i> MASTER LIST</button>
+            <button onclick="nav('add_master')" class="menu-item"><i class="fa fa-plus-circle"></i> ADD MASTER</button>
+            <button onclick="nav('input_wip', loadMasterOptions)" class="menu-item"><i class="fa fa-edit"></i> INPUT WIP</button>
+            <button onclick="nav('wip_report', loadWipReport)" class="menu-item"><i class="fa fa-chart-line"></i> LAPORAN</button>
+            <button onclick="nav('stok', loadStok)" class="menu-item"><i class="fa fa-box"></i> DATA STOK</button>
         </nav>
     </div>
 
-    <div class="p-4">
-        <div id="add_master" class="page max-w-sm mx-auto bg-white p-5 rounded-xl shadow">
-            <h2 class="font-bold text-pink-600 mb-4">Tambah Master</h2>
-            <input id="m_cust" class="w-full border p-2 mb-2 rounded" placeholder="Customer">
-            <input id="m_model" class="w-full border p-2 mb-2 rounded" placeholder="Model">
-            <input id="m_item" class="w-full border p-2 mb-2 rounded" placeholder="Item">
-            <input id="m_proses" class="w-full border p-2 mb-4 rounded" placeholder="Proses (ex: Potong,Jahit)">
-            <button onclick="simpanMaster()" class="w-full bg-pink-500 text-white p-3 rounded font-bold">SIMPAN</button>
+    <div class="p-4 max-w-lg mx-auto">
+        <div id="master_list" class="page active bg-white p-5 rounded-2xl shadow">
+            <h2 class="font-bold text-pink-600 mb-4">📋 Daftar Master</h2>
+            <div class="overflow-x-auto"><table class="w-full text-xs text-left" id="t-master"><thead><tr class="bg-pink-100"><th>Cust</th><th>Model</th><th>Item</th></tr></thead><tbody id="master-tabel-body"></tbody></table></div>
         </div>
 
-        <div id="master_list" class="page active text-center mt-10">Daftar Master...</div>
+        <div id="add_master" class="page bg-white p-5 rounded-2xl shadow">
+            <h2 class="font-bold text-pink-600 mb-4">✨ Tambah Master</h2>
+            <input id="m_cust" class="w-full border p-3 mb-2 rounded-xl" placeholder="Customer">
+            <input id="m_model" class="w-full border p-3 mb-2 rounded-xl" placeholder="Model">
+            <input id="m_item" class="w-full border p-3 mb-2 rounded-xl" placeholder="Item">
+            <input id="m_proses" class="w-full border p-3 mb-4 rounded-xl" placeholder="Proses (ex: Potong,Jahit)">
+            <button onclick="simpanMaster()" class="w-full bg-pink-500 text-white p-3 rounded-xl font-bold">SIMPAN DATA</button>
+        </div>
     </div>
 
 <script>
@@ -49,27 +57,34 @@
 
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-    function nav(id) {
+    function nav(id, callback) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         toggleSidebar();
+        if(callback) callback();
     }
 
-    // Pastikan fungsi ini dipanggil dengan benar
+    // Fungsi Fix untuk Input
     async function simpanMaster() {
         const cust = document.getElementById('m_cust').value;
         const model = document.getElementById('m_model').value;
         const item = document.getElementById('m_item').value;
         const proses = document.getElementById('m_proses').value;
 
-        if(!cust || !item) return alert("Isi data dengan lengkap!");
+        if(!cust || !item) return alert("Harap isi Customer dan Item!");
 
         const { error } = await sb.from('master_items').insert([{
             customer: cust, model: model, item_name: item, proses: proses
         }]);
         
-        if(error) alert("Gagal: " + error.message);
+        if(error) alert("Error: " + error.message);
         else { alert("Berhasil!"); location.reload(); }
+    }
+
+    async function loadMasterList() {
+        const { data } = await sb.from('master_items').select('*');
+        const body = document.getElementById('master-tabel-body');
+        body.innerHTML = (data||[]).map(i => `<tr><td class='p-2'>${i.customer}</td><td class='p-2'>${i.model}</td><td class='p-2'>${i.item_name}</td></tr>`).join('');
     }
 </script>
 </body>
