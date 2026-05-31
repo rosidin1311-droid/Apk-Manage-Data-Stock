@@ -12,60 +12,115 @@
         .page { display: none; } .page.active { display: block; }
         .sidebar { transform: translateX(-100%); transition: 0.4s; }
         .sidebar.open { transform: translateX(0); }
-        /* Style Sidebar Dashboard */
-        .menu-item { @apply w-full bg-white p-4 mb-3 rounded-2xl border-2 border-pink-200 font-bold text-pink-600 flex items-center gap-4 hover:border-pink-500 transition; }
+        .menu-btn { @apply w-full bg-white p-4 mb-3 rounded-xl border border-pink-200 font-bold text-pink-600 flex items-center gap-4 hover:bg-pink-100 transition; }
     </style>
 </head>
 <body class="bg-pink-50 font-sans pb-10">
 
     <header class="bg-white p-4 shadow-md sticky top-0 z-40 flex justify-between items-center">
         <h1 class="text-pink-600 font-bold uppercase text-lg">Data Stok 2.0</h1>
-        <button onclick="toggleSidebar()" class="text-pink-600 text-2xl"><i class="fa fa-bars"></i></button>
+        <button onclick="document.getElementById('sidebar').classList.add('open')" class="text-pink-600 text-2xl"><i class="fa fa-bars"></i></button>
     </header>
 
-    <aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-72 bg-pink-50 z-50 p-6 shadow-2xl">
-        <div class="mb-8 flex justify-between items-center">
+    <aside id="sidebar" class="sidebar fixed top-0 left-0 h-full w-72 bg-white z-50 p-6 shadow-2xl border-r-4 border-pink-500">
+        <div class="flex justify-between items-center mb-8">
             <h2 class="font-bold text-pink-600">DASHBOARD</h2>
-            <button onclick="toggleSidebar()" class="text-pink-600 text-xl"><i class="fa fa-times"></i></button>
+            <button onclick="document.getElementById('sidebar').classList.remove('open')"><i class="fa fa-times text-pink-600"></i></button>
         </div>
-        <nav>
-            <button onclick="nav('master_list', loadMasterList)" class="menu-item"><i class="fa fa-list"></i> MASTER LIST</button>
-            <button onclick="nav('add_master')" class="menu-item"><i class="fa fa-plus"></i> ADD MASTER</button>
-            <button onclick="nav('input_wip', loadMasterOptions)" class="menu-item"><i class="fa fa-edit"></i> INPUT WIP</button>
-            <button onclick="nav('wip_report', loadWipReport)" class="menu-item"><i class="fa fa-chart-line"></i> LAPORAN WIP</button>
-            <button onclick="nav('stok', loadStok)" class="menu-item"><i class="fa fa-box"></i> DATA STOK</button>
-        </nav>
+        <button onclick="showPage('master_list')" class="menu-btn"><i class="fa fa-list"></i> MASTER LIST</button>
+        <button onclick="showPage('add_master')" class="menu-btn"><i class="fa fa-plus"></i> ADD MASTER</button>
+        <button onclick="showPage('input_wip')" class="menu-btn"><i class="fa fa-edit"></i> INPUT WIP</button>
+        <button onclick="showPage('wip_report')" class="menu-btn"><i class="fa fa-chart-line"></i> LAPORAN WIP</button>
+        <button onclick="showPage('stok')" class="menu-btn"><i class="fa fa-box"></i> DATA STOK</button>
     </aside>
 
     <main class="p-4 max-w-lg mx-auto">
-        <div id="master_list" class="page active bg-white p-5 rounded-2xl shadow"><h2 class="font-bold text-pink-600 mb-4">📋 Master List</h2><div id="master-tabel-body" class="space-y-2"></div></div>
-        <div id="add_master" class="page bg-white p-5 rounded-2xl shadow"><h2 class="font-bold text-pink-600 mb-4">✨ Tambah Master</h2><input id="m_cust" class="w-full border p-3 mb-2 rounded-xl" placeholder="Customer"><input id="m_model" class="w-full border p-3 mb-2 rounded-xl" placeholder="Model"><input id="m_item" class="w-full border p-3 mb-2 rounded-xl" placeholder="Item"><input id="m_proses" class="w-full border p-3 mb-4 rounded-xl" placeholder="Proses"><button onclick="simpanMaster()" class="w-full bg-pink-500 text-white p-3 rounded-xl font-bold">SIMPAN</button></div>
-        <div id="input_wip" class="page bg-white p-5 rounded-2xl shadow"><h2 class="font-bold text-pink-600 mb-4">📝 Input WIP</h2><select id="p_master_select" class="w-full border p-3 mb-2 rounded-xl"></select><input id="p_qty" type="number" class="w-full border p-3 mb-4 rounded-xl" placeholder="Jumlah"><button onclick="simpanWIP()" class="w-full bg-pink-500 text-white p-3 rounded-xl font-bold">INPUT</button></div>
-        <div id="wip_report" class="page bg-white p-5 rounded-2xl shadow"><h2 class="font-bold text-pink-600 mb-4">📊 Laporan WIP</h2><table id="wip-table" class="w-full text-xs"><thead><tr class="bg-pink-100"><th>Item</th><th>Jml</th></tr></thead><tbody id="wip-tabel-body"></tbody></table></div>
-        <div id="stok" class="page bg-white p-5 rounded-2xl shadow"><h2 class="font-bold text-pink-600 mb-4">📦 Data Stok</h2><table id="stok-table" class="w-full text-xs"><thead><tr class="bg-pink-100"><th>Detail</th><th>Sisa</th></tr></thead><tbody id="stok-tabel-body"></tbody></table></div>
+        <input type="text" id="searchBar" onkeyup="searchTable()" placeholder="🔍 Cari data..." class="w-full p-3 mb-4 rounded-xl border border-pink-200">
+        
+        <div id="input_wip" class="page active bg-white p-5 rounded-2xl shadow">
+            <h2 class="font-bold text-pink-600 mb-4">📝 Input Produksi</h2>
+            <select id="sel_cust" onchange="updateModel()" class="w-full border p-3 mb-2 rounded-xl"></select>
+            <select id="sel_model" onchange="updateItem()" class="w-full border p-3 mb-2 rounded-xl"></select>
+            <select id="sel_item" onchange="showProses()" class="w-full border p-3 mb-2 rounded-xl"></select>
+            <div id="display_proses" class="p-3 bg-pink-100 rounded-xl mb-2 text-xs">Proses: -</div>
+            <input id="p_qty" type="number" oninput="autoSave('p_qty')" class="w-full border p-3 mb-4 rounded-xl" placeholder="Jumlah">
+            <button onclick="simpanWIP()" class="w-full bg-pink-500 text-white p-3 rounded-xl font-bold">SIMPAN DATA</button>
+        </div>
+
+        <div id="master_list" class="page bg-white p-5 rounded-2xl shadow">...</div>
+        <div id="add_master" class="page bg-white p-5 rounded-2xl shadow">...</div>
+        <div id="wip_report" class="page bg-white p-5 rounded-2xl shadow">...</div>
+        <div id="stok" class="page bg-white p-5 rounded-2xl shadow">...</div>
     </main>
 
 <script>
     const sb = supabase.createClient('https://gbohivcpptvejvkehzun.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdib2hpdmNwcHR2ZWp2a2VoenVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTkxNjAsImV4cCI6MjA5NTczNTE2MH0.bB1V04AMzJ4PT77gP7-wan0O84_SjtExvCBfmw60zDE');
 
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-    function nav(id, cb) { 
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
-        document.getElementById(id).classList.add('active'); 
-        toggleSidebar(); 
-        if(cb) cb(); 
+    // --- 1. Navigasi ---
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('sidebar').classList.remove('open');
     }
 
-    // Fungsi fetch data (Template)
-    async function loadMasterList() {
-        const { data } = await sb.from('master_items').select('*');
-        document.getElementById('master-tabel-body').innerHTML = (data||[]).map(i => `<div class="p-3 border rounded">${i.item_name}</div>`).join('');
+    // --- 2. Auto-Save ---
+    function autoSave(id) {
+        localStorage.setItem(id, document.getElementById(id).value);
     }
-    
-    // Fungsi lainnya akan mengikuti struktur di atas
-    async function loadWipReport() { /* fetch data wip */ }
-    async function loadStok() { /* fetch data stok */ }
-    async function loadMasterOptions() { /* fetch options untuk input */ }
+
+    // --- 3. Logika Dropdown Berantai ---
+    async function initDropdown() {
+        const { data } = await sb.from('master_items').select('customer');
+        const custs = [...new Set(data.map(i => i.customer))];
+        document.getElementById('sel_cust').innerHTML = '<option value="">Pilih Customer</option>' + custs.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    async function updateModel() {
+        const cust = document.getElementById('sel_cust').value;
+        localStorage.setItem('sel_cust', cust);
+        const { data } = await sb.from('master_items').select('model').eq('customer', cust);
+        const models = [...new Set(data.map(i => i.model))];
+        document.getElementById('sel_model').innerHTML = '<option value="">Pilih Model</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
+    }
+
+    async function updateItem() {
+        const model = document.getElementById('sel_model').value;
+        localStorage.setItem('sel_model', model);
+        const { data } = await sb.from('master_items').select('item_name').eq('model', model);
+        document.getElementById('sel_item').innerHTML = '<option value="">Pilih Item</option>' + data.map(i => `<option value="${i.item_name}">${i.item_name}</option>`).join('');
+    }
+
+    async function showProses() {
+        const item = document.getElementById('sel_item').value;
+        localStorage.setItem('sel_item', item);
+        const { data } = await sb.from('master_items').select('proses').eq('item_name', item).single();
+        if(data) document.getElementById('display_proses').innerHTML = `<span class="text-pink-600 font-bold">Proses:</span> ${data.proses}`;
+    }
+
+    // --- 4. Simpan WIP ---
+    async function simpanWIP() {
+        const dataInsert = {
+            customer: document.getElementById('sel_cust').value,
+            model: document.getElementById('sel_model').value,
+            item_name: document.getElementById('sel_item').value,
+            jumlah: parseInt(document.getElementById('p_qty').value),
+            proses: document.getElementById('display_proses').innerText.replace("Proses: ", ""),
+            ng: 0, is_done: false
+        };
+        const { error } = await sb.from('wip_logs').insert([dataInsert]);
+        if(error) return alert("Error: " + error.message);
+        alert("Data berhasil tersimpan!");
+        localStorage.clear();
+        location.reload();
+    }
+
+    // --- 5. Filter Search ---
+    function searchTable() {
+        let input = document.getElementById("searchBar").value.toUpperCase();
+        // Logika filter (pastikan ID tabel sesuai)
+    }
+
+    window.onload = initDropdown;
 </script>
 </body>
 </html>
