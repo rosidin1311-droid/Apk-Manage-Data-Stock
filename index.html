@@ -152,7 +152,7 @@
         tbody.innerHTML = (w||[]).filter(i => !i.is_done).map(i => {
             const master = m.find(ma => ma.item_name === i.item_name);
             const isFinal = (i.proses === master?.proses.split(',').pop()?.trim());
-            const tgl = i.created_at ? new Date(i.created_at).toLocaleDateString('id-ID') : '-';
+            const tgl = new Date().toLocaleDateString('id-ID'); '-';
             return `<tr>
                 <td>${tgl}</td>
                 <td>${i.customer}/${i.model}/${i.item_name}</td>
